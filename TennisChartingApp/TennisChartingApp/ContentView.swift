@@ -8,18 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack(spacing: 40) {
-            Text("Tennis Charting")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+    @State private var authManager = AuthManager.shared
 
-            Button("Start Match") {
-                // TODO: Navigate to match screen
+    var body: some View {
+        Group {
+            if authManager.isAuthenticated {
+                HomeView()
+            } else {
+                OpeningView()
             }
-            .buttonStyle(.borderedProminent)
         }
-        .padding()
     }
 }
 
