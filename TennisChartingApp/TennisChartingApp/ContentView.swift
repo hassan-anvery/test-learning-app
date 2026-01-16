@@ -9,11 +9,15 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        VStack(spacing: 40) {
+            Text("Tennis Charting")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Button("Start Match") {
+                // TODO: Navigate to match screen
+            }
+            .buttonStyle(.borderedProminent)
         }
         .padding()
     }
