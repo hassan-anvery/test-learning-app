@@ -20,9 +20,7 @@ struct OpeningView: View {
 
                     // Logo area
                     VStack(spacing: 8) {
-                        Image(systemName: "tennisball.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.green)
+                        TennisBallLogo(size: 80)
 
                         Text("Tennis Charting")
                             .font(.largeTitle)

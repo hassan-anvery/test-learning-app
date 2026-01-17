@@ -54,13 +54,19 @@ struct StatsView: View {
 
 struct MatchStatsCard: View {
     let match: Match
+    @State private var selectedPoint: MomentumPoint?
 
     private var momentumData: [MomentumPoint] {
+        // Get fresh match data from store to ensure notes are included
+        guard let freshMatch = MatchStore.shared.getMatch(by: match.id) else {
+            return []
+        }
+
         var data: [MomentumPoint] = []
         var momentum: Int = 0
         var pointIndex = 0
 
-        for set in match.sets {
+        for set in freshMatch.sets {
             for game in set.games {
                 for point in game.points {
                     if point.winner == .playerA {
@@ -68,12 +74,12 @@ struct MatchStatsCard: View {
                     } else {
                         momentum -= 1
                     }
-                    data.append(MomentumPoint(index: pointIndex, momentum: momentum))
+                    data.append(MomentumPoint(index: pointIndex, momentum: momentum, point: point))
                     pointIndex += 1
                 }
             }
 
-            // Add tiebreak points
+            // Add tiebreak points (no individual Point data available)
             if let tiebreak = set.tiebreakScore {
                 let totalTiebreakPoints = tiebreak.playerAPoints + tiebreak.playerBPoints
                 for i in 0..<totalTiebreakPoints {
@@ -83,7 +89,7 @@ struct MatchStatsCard: View {
                     } else {
                         momentum -= 1
                     }
-                    data.append(MomentumPoint(index: pointIndex, momentum: momentum))
+                    data.append(MomentumPoint(index: pointIndex, momentum: momentum, point: nil))
                     pointIndex += 1
                 }
             }
@@ -156,6 +162,26 @@ struct MatchStatsCard: View {
                             .foregroundStyle(Color.gray.opacity(0.3))
                     }
                 }
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .onTapGesture { location in
+                                guard let plotFrame = proxy.plotFrame else { return }
+                                let xPosition = location.x - geometry[plotFrame].origin.x
+                                guard let index: Int = proxy.value(atX: xPosition) else { return }
+
+                                // Find the nearest point
+                                if let nearest = momentumData.min(by: { abs($0.index - index) < abs($1.index - index) }) {
+                                    selectedPoint = nearest
+                                }
+                            }
+                    }
+                }
+                .popover(item: $selectedPoint) { point in
+                    NotePopoverView(point: point, match: MatchStore.shared.getMatch(by: match.id) ?? match)
+                }
 
                 HStack {
                     Text(match.playerAName)
@@ -182,6 +208,92 @@ struct MomentumPoint: Identifiable {
     let id = UUID()
     let index: Int
     let momentum: Int
+    let point: Point?
+}
+
+struct NotePopoverView: View {
+    let point: MomentumPoint
+    let match: Match
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            Text("Point \(point.index + 1)")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            if let gamePoint = point.point, let note = gamePoint.note {
+                // Who won
+                HStack {
+                    Text("Won by:")
+                        .foregroundColor(.gray)
+                    Text(gamePoint.winner == .playerA ? match.playerAName : match.playerBName)
+                        .foregroundColor(.white)
+                        .fontWeight(.medium)
+                }
+
+                // Note about which player
+                if let subject = note.playerSubject {
+                    HStack {
+                        Text("Note about:")
+                            .foregroundColor(.gray)
+                        Text(subject == .playerA ? match.playerAName : match.playerBName)
+                            .foregroundColor(.blue)
+                    }
+                }
+
+                // How won
+                if let howWon = note.howWon {
+                    HStack {
+                        Text("How:")
+                            .foregroundColor(.gray)
+                        Text(howWon.rawValue)
+                            .foregroundColor(.green)
+                    }
+                }
+
+                // Attitude
+                if let attitude = note.attitude {
+                    HStack {
+                        Text("Attitude:")
+                            .foregroundColor(.gray)
+                        Text(attitude.rawValue)
+                            .foregroundColor(.orange)
+                    }
+                }
+
+                // Additional notes
+                if let additionalNotes = note.additionalNotes, !additionalNotes.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Notes:")
+                            .foregroundColor(.gray)
+                        Text(additionalNotes)
+                            .foregroundColor(.white)
+                    }
+                }
+            } else if let gamePoint = point.point {
+                // Point exists but no notes
+                HStack {
+                    Text("Won by:")
+                        .foregroundColor(.gray)
+                    Text(gamePoint.winner == .playerA ? match.playerAName : match.playerBName)
+                        .foregroundColor(.white)
+                        .fontWeight(.medium)
+                }
+                Text("No notes recorded")
+                    .foregroundColor(.gray)
+                    .italic()
+            } else {
+                // Tiebreak point (no detailed data)
+                Text("Tiebreak point")
+                    .foregroundColor(.gray)
+                    .italic()
+            }
+        }
+        .padding()
+        .frame(minWidth: 200)
+        .background(Color.black.opacity(0.9))
+    }
 }
 
 #Preview {

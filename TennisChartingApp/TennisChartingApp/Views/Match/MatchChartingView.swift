@@ -176,25 +176,6 @@ struct MatchChartingView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-
-                // Bottom note button for Player B
-                HStack {
-                    Button {
-                        showNoteForPlayerB = true
-                    } label: {
-                        Text("Note")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
-                    }
-                    Spacer()
-                }
-                .padding()
             }
         }
         .alert("End Match", isPresented: $showEndMatchConfirmation) {
@@ -355,15 +336,15 @@ struct MatchChartingView: View {
     }
 
     private func addNoteToLastPoint(for player: PlayerSide, note: PointNote) {
-        // Find the last point for this player and add note
+        // Find the most recent point overall and add note with player subject
         for setIndex in match.sets.indices.reversed() {
             for gameIndex in match.sets[setIndex].games.indices.reversed() {
-                for pointIndex in match.sets[setIndex].games[gameIndex].points.indices.reversed() {
-                    if match.sets[setIndex].games[gameIndex].points[pointIndex].winner == player {
-                        match.sets[setIndex].games[gameIndex].points[pointIndex].note = note
-                        MatchStore.shared.updateMatch(match)
-                        return
-                    }
+                if let pointIndex = match.sets[setIndex].games[gameIndex].points.indices.last {
+                    var noteWithSubject = note
+                    noteWithSubject.playerSubject = player
+                    match.sets[setIndex].games[gameIndex].points[pointIndex].note = noteWithSubject
+                    MatchStore.shared.updateMatch(match)
+                    return
                 }
             }
         }

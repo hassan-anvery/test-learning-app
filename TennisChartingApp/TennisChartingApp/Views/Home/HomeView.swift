@@ -10,6 +10,8 @@ struct HomeView: View {
     @State private var showStats = false
     @State private var showProfile = false
     @State private var selectedMatch: Match?
+    @State private var matchToDelete: Match?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         ZStack {
@@ -19,10 +21,7 @@ struct HomeView: View {
             VStack(spacing: 0) {
                 // Top bar with logo and profile
                 HStack {
-                    Text("logo")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
+                    TennisBallLogo(size: 32)
 
                     Spacer()
 
@@ -52,17 +51,29 @@ struct HomeView: View {
                 .padding(.top, 16)
 
                 // Match list
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(MatchStore.shared.matches) { match in
-                            MatchRowView(match: match)
-                                .onTapGesture {
-                                    selectedMatch = match
+                List {
+                    ForEach(MatchStore.shared.matches) { match in
+                        MatchRowView(match: match)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                            .onTapGesture {
+                                selectedMatch = match
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                if match.isCompleted {
+                                    Button(role: .destructive) {
+                                        matchToDelete = match
+                                        showDeleteConfirmation = true
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
                                 }
-                        }
+                            }
                     }
-                    .padding()
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
 
                 Spacer()
 
@@ -85,6 +96,19 @@ struct HomeView: View {
         }
         .sheet(item: $selectedMatch) { match in
             MatchDetailView(match: match)
+        }
+        .alert("Delete Match", isPresented: $showDeleteConfirmation) {
+            Button("Delete", role: .destructive) {
+                if let match = matchToDelete {
+                    MatchStore.shared.deleteMatch(match)
+                }
+                matchToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                matchToDelete = nil
+            }
+        } message: {
+            Text("Are you sure you want to delete this match? This cannot be undone.")
         }
     }
 }

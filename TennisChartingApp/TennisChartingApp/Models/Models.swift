@@ -240,6 +240,7 @@ struct Point: Codable, Identifiable {
 }
 
 struct PointNote: Codable {
+    var playerSubject: PlayerSide?  // Which player this note is about
     var howWon: HowPointWon?
     var attitude: Attitude?
     var additionalNotes: String?

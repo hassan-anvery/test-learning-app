@@ -12,8 +12,14 @@ enum MatchSetupStep: Int, CaseIterable {
     case matchFormat = 3
 }
 
+enum FocusedField {
+    case playerA
+    case playerB
+}
+
 struct MatchSetupView: View {
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var focusedField: FocusedField?
     @State private var currentStep: MatchSetupStep = .playerNames
     @State private var playerAName = ""
     @State private var playerBName = ""
@@ -46,11 +52,6 @@ struct MatchSetupView: View {
                     }
 
                     Spacer()
-
-                    Text("ur player")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .opacity(currentStep == .playerNames ? 1 : 0)
                 }
                 .padding(.horizontal)
 
@@ -85,6 +86,17 @@ struct MatchSetupView: View {
         .fullScreenCover(item: $createdMatch) { match in
             MatchChartingView(match: match)
         }
+        .onChange(of: createdMatch?.id) { oldValue, newValue in
+            // When MatchChartingView dismisses (createdMatch becomes nil)
+            if oldValue != nil && newValue == nil {
+                // Check if the match was completed - if so, dismiss back to Home
+                if let matchId = oldValue,
+                   let storedMatch = MatchStore.shared.getMatch(by: matchId),
+                   storedMatch.isCompleted {
+                    dismiss()
+                }
+            }
+        }
     }
 
     private var playerNamesSection: some View {
@@ -94,6 +106,7 @@ struct MatchSetupView: View {
                     .foregroundColor(.white)
 
                 TextField("Your player", text: $playerAName)
+                    .focused($focusedField, equals: .playerA)
                     .textFieldStyle(.plain)
                     .padding()
                     .background(Color.white.opacity(0.1))
@@ -106,6 +119,7 @@ struct MatchSetupView: View {
                     .foregroundColor(.white)
 
                 TextField("Opponent", text: $playerBName)
+                    .focused($focusedField, equals: .playerB)
                     .textFieldStyle(.plain)
                     .padding()
                     .background(Color.white.opacity(0.1))
