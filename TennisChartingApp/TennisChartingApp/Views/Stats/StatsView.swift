@@ -91,7 +91,7 @@ struct StatsView: View {
 
 struct MatchStatsCard: View {
     let match: Match
-    @State private var selectedPoint: MomentumPoint?
+    @State private var showDetail = false
 
     private var momentumData: [MomentumPoint] {
         // Get fresh match data from store to ensure notes are included
@@ -199,33 +199,13 @@ struct MatchStatsCard: View {
                             .foregroundStyle(Color.gray.opacity(0.3))
                     }
                 }
-                .chartOverlay { proxy in
-                    GeometryReader { geometry in
-                        Rectangle()
-                            .fill(Color.clear)
-                            .contentShape(Rectangle())
-                            .onTapGesture { location in
-                                guard let plotFrame = proxy.plotFrame else { return }
-                                let xPosition = location.x - geometry[plotFrame].origin.x
-                                guard let index: Int = proxy.value(atX: xPosition) else { return }
-
-                                // Find the nearest point
-                                if let nearest = momentumData.min(by: { abs($0.index - index) < abs($1.index - index) }) {
-                                    selectedPoint = nearest
-                                }
-                            }
-                    }
-                }
-                .popover(item: $selectedPoint) { point in
-                    NotePopoverView(point: point, match: MatchStore.shared.getMatch(by: match.id) ?? match)
-                }
 
                 HStack {
                     Text(match.playerAName)
                         .font(.caption)
                         .foregroundColor(.green)
                     Spacer()
-                    Text("Match Charting")
+                    Text("Tap for details")
                         .font(.caption)
                         .foregroundColor(.gray)
                     Spacer()
@@ -238,6 +218,13 @@ struct MatchStatsCard: View {
         .padding()
         .background(Color.white.opacity(0.1))
         .cornerRadius(12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            showDetail = true
+        }
+        .navigationDestination(isPresented: $showDetail) {
+            MatchStatsDetailView(match: match)
+        }
     }
 }
 
