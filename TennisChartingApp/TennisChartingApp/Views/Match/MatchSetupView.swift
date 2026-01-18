@@ -7,9 +7,8 @@ import SwiftUI
 
 enum MatchSetupStep: Int, CaseIterable {
     case playerNames = 0
-    case whoIsStarting = 1
-    case whoIsServing = 2
-    case matchFormat = 3
+    case whoIsServing = 1
+    case matchFormat = 2
 }
 
 enum FocusedField {
@@ -23,7 +22,6 @@ struct MatchSetupView: View {
     @State private var currentStep: MatchSetupStep = .playerNames
     @State private var playerAName = ""
     @State private var playerBName = ""
-    @State private var startingPlayer: PlayerSide?
     @State private var firstServer: PlayerSide?
     @State private var matchFormat: MatchFormat = .bestOf3
     @State private var navigateToMatch = false
@@ -61,11 +59,6 @@ struct MatchSetupView: View {
                 VStack(spacing: 24) {
                     if currentStep.rawValue >= MatchSetupStep.playerNames.rawValue {
                         playerNamesSection
-                    }
-
-                    if currentStep.rawValue >= MatchSetupStep.whoIsStarting.rawValue {
-                        whoIsStartingSection
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
 
                     if currentStep.rawValue >= MatchSetupStep.whoIsServing.rawValue {
@@ -130,40 +123,6 @@ struct MatchSetupView: View {
             if currentStep == .playerNames {
                 nextButton(enabled: !playerAName.isEmpty && !playerBName.isEmpty) {
                     withAnimation {
-                        currentStep = .whoIsStarting
-                    }
-                }
-            }
-        }
-    }
-
-    private var whoIsStartingSection: some View {
-        VStack(spacing: 16) {
-            Text("Who's starting?")
-                .foregroundColor(.white)
-                .font(.headline)
-
-            HStack(spacing: 24) {
-                playerSelectionButton(
-                    label: "A",
-                    sublabel: playerAName,
-                    isSelected: startingPlayer == .playerA
-                ) {
-                    startingPlayer = .playerA
-                }
-
-                playerSelectionButton(
-                    label: "B",
-                    sublabel: playerBName,
-                    isSelected: startingPlayer == .playerB
-                ) {
-                    startingPlayer = .playerB
-                }
-            }
-
-            if currentStep == .whoIsStarting {
-                nextButton(enabled: startingPlayer != nil) {
-                    withAnimation {
                         currentStep = .whoIsServing
                     }
                 }
@@ -173,7 +132,7 @@ struct MatchSetupView: View {
 
     private var whoIsServingSection: some View {
         VStack(spacing: 16) {
-            Text("Who's serving?")
+            Text("Who's serving first?")
                 .foregroundColor(.white)
                 .font(.headline)
 
@@ -280,24 +239,21 @@ struct MatchSetupView: View {
         switch currentStep {
         case .playerNames:
             break
-        case .whoIsStarting:
-            currentStep = .playerNames
         case .whoIsServing:
-            currentStep = .whoIsStarting
+            currentStep = .playerNames
         case .matchFormat:
             currentStep = .whoIsServing
         }
     }
 
     private func startMatch() {
-        guard let startingPlayer = startingPlayer,
-              let firstServer = firstServer else { return }
+        guard let firstServer = firstServer else { return }
 
         let match = Match(
             playerAName: playerAName,
             playerBName: playerBName,
             matchFormat: matchFormat,
-            startingPlayer: startingPlayer,
+            startingPlayer: firstServer,
             firstServer: firstServer
         )
 
