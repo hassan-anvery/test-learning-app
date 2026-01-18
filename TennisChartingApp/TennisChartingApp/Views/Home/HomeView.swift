@@ -12,6 +12,16 @@ struct HomeView: View {
     @State private var selectedMatch: Match?
     @State private var matchToDelete: Match?
     @State private var showDeleteConfirmation = false
+    @State private var searchText = ""
+
+    private var filteredMatches: [Match] {
+        if searchText.isEmpty {
+            return MatchStore.shared.matches
+        }
+        return MatchStore.shared.matches.filter { match in
+            match.playerBName.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -40,9 +50,16 @@ struct HomeView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
-                    Text("Search opponent name")
-                        .foregroundColor(.gray)
-                    Spacer()
+                    TextField("Search opponent name", text: $searchText)
+                        .foregroundColor(.white)
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
+                    }
                 }
                 .padding()
                 .background(Color.white.opacity(0.1))
@@ -52,7 +69,7 @@ struct HomeView: View {
 
                 // Match list
                 List {
-                    ForEach(MatchStore.shared.matches) { match in
+                    ForEach(filteredMatches) { match in
                         MatchRowView(match: match)
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)

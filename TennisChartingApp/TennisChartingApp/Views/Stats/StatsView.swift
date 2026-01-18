@@ -8,6 +8,18 @@ import Charts
 
 struct StatsView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+
+    private var filteredMatches: [Match] {
+        let completedMatches = MatchStore.shared.matches.filter { $0.isCompleted }
+        if searchText.isEmpty {
+            return completedMatches
+        }
+        return completedMatches.filter { match in
+            match.playerAName.localizedCaseInsensitiveContains(searchText) ||
+            match.playerBName.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -27,8 +39,33 @@ struct StatsView: View {
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 20) {
-                            ForEach(MatchStore.shared.matches.filter { $0.isCompleted }) { match in
-                                MatchStatsCard(match: match)
+                            // Search bar
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.gray)
+                                TextField("Search matches", text: $searchText)
+                                    .foregroundColor(.white)
+                                if !searchText.isEmpty {
+                                    Button {
+                                        searchText = ""
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(8)
+
+                            if filteredMatches.isEmpty && !searchText.isEmpty {
+                                Text("No matches found")
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 40)
+                            } else {
+                                ForEach(filteredMatches) { match in
+                                    MatchStatsCard(match: match)
+                                }
                             }
                         }
                         .padding()
