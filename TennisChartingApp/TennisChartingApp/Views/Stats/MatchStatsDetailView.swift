@@ -10,7 +10,7 @@ struct MatchStatsDetailView: View {
     let match: Match
     @Environment(\.dismiss) private var dismiss
     @State private var selectedPointIndex: Int? = nil
-    @State private var editingTimelinePoint: TimelinePoint? = nil
+    @State private var editingContext: EditingContext? = nil
 
     // Helper struct to track point location for editing
     struct TimelinePoint: Identifiable {
@@ -19,6 +19,14 @@ struct MatchStatsDetailView: View {
         let setIndex: Int
         let gameIndex: Int
         let pointInGameIndex: Int
+    }
+
+    // Combined editing state to avoid race conditions with fullScreenCover
+    struct EditingContext: Identifiable {
+        let id = UUID()
+        let timelinePoint: TimelinePoint
+        let player: PlayerSide
+        let point: Point
     }
 
     private var currentMatch: Match {
@@ -235,9 +243,22 @@ struct MatchStatsDetailView: View {
                                         onTap: {
                                             selectedPointIndex = timelinePoint.id
                                         },
-                                        onEditNote: {
-                                            if timelinePoint.point != nil {
-                                                editingTimelinePoint = timelinePoint
+                                        onEditNoteA: {
+                                            if let point = timelinePoint.point {
+                                                editingContext = EditingContext(
+                                                    timelinePoint: timelinePoint,
+                                                    player: .playerA,
+                                                    point: point
+                                                )
+                                            }
+                                        },
+                                        onEditNoteB: {
+                                            if let point = timelinePoint.point {
+                                                editingContext = EditingContext(
+                                                    timelinePoint: timelinePoint,
+                                                    player: .playerB,
+                                                    point: point
+                                                )
                                             }
                                         }
                                     )
@@ -256,33 +277,40 @@ struct MatchStatsDetailView: View {
         .toolbarBackground(Color.black, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .sheet(item: $editingTimelinePoint) { timelinePoint in
-            if let point = timelinePoint.point {
-                let playerName = point.winner == .playerA ? currentMatch.playerAName : currentMatch.playerBName
-                NoteEntryView(playerName: playerName) { note in
-                    saveNote(note, for: timelinePoint)
+        .fullScreenCover(item: $editingContext) { context in
+            ZStack {
+                Color.black.ignoresSafeArea()
+
+                NoteEntryView(
+                    playerName: context.player == .playerA ? currentMatch.playerAName : currentMatch.playerBName,
+                    existingNote: context.player == .playerA ? context.point.note : context.point.playerBNote
+                ) { note in
+                    saveNote(note, for: context.timelinePoint, player: context.player)
+                    editingContext = nil
                 }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
             }
+            .interactiveDismissDisabled(true)
         }
     }
 
-    private func saveNote(_ note: PointNote, for timelinePoint: TimelinePoint) {
+    private func saveNote(_ note: PointNote, for timelinePoint: TimelinePoint, player: PlayerSide) {
         var updatedMatch = currentMatch
         guard timelinePoint.setIndex >= 0,
               timelinePoint.gameIndex >= 0,
               timelinePoint.pointInGameIndex >= 0 else { return }
 
-        // Set the player subject based on who won the point
         var noteWithSubject = note
-        if let point = timelinePoint.point {
-            noteWithSubject.playerSubject = point.winner
-        }
+        noteWithSubject.playerSubject = player
 
-        updatedMatch.sets[timelinePoint.setIndex]
-            .games[timelinePoint.gameIndex]
-            .points[timelinePoint.pointInGameIndex].note = noteWithSubject
+        if player == .playerA {
+            updatedMatch.sets[timelinePoint.setIndex]
+                .games[timelinePoint.gameIndex]
+                .points[timelinePoint.pointInGameIndex].note = noteWithSubject
+        } else {
+            updatedMatch.sets[timelinePoint.setIndex]
+                .games[timelinePoint.gameIndex]
+                .points[timelinePoint.pointInGameIndex].playerBNote = noteWithSubject
+        }
 
         MatchStore.shared.updateMatch(updatedMatch)
     }
@@ -293,7 +321,8 @@ struct TimelinePointRow: View {
     let match: Match
     let isSelected: Bool
     let onTap: () -> Void
-    let onEditNote: () -> Void
+    let onEditNoteA: () -> Void
+    let onEditNoteB: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -309,46 +338,17 @@ struct TimelinePointRow: View {
                 Text(point.winner == .playerA ? match.playerAName : match.playerBName)
                     .font(.caption)
                     .foregroundColor(point.winner == .playerA ? .green : .red)
-                    .frame(width: 80, alignment: .leading)
+                    .frame(width: 60, alignment: .leading)
 
-                // Note preview or add button
-                if let note = point.note {
-                    VStack(alignment: .leading, spacing: 2) {
-                        if let howWon = note.howWon {
-                            Text(howWon.rawValue)
-                                .font(.caption)
-                                .foregroundColor(.white)
-                        }
-                        if let attitude = note.attitude {
-                            Text(attitude.rawValue)
-                                .font(.caption2)
-                                .foregroundColor(.orange)
-                        }
-                        if let additionalNotes = note.additionalNotes, !additionalNotes.isEmpty {
-                            Text(additionalNotes)
-                                .font(.caption2)
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Button(action: onEditNote) {
-                        Text("Add note")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                // Notes section - show both
+                VStack(alignment: .leading, spacing: 4) {
+                    // Player A note
+                    noteRow(label: "A:", note: point.note, color: .green, onAdd: onEditNoteA, onEdit: onEditNoteA)
 
-                // Edit button if note exists
-                if timelinePoint.point?.note != nil {
-                    Button(action: onEditNote) {
-                        Image(systemName: "pencil")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
+                    // Player B note
+                    noteRow(label: "B:", note: point.playerBNote, color: .red, onAdd: onEditNoteB, onEdit: onEditNoteB)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 // Tiebreak point
                 Text("Tiebreak")
@@ -365,6 +365,49 @@ struct TimelinePointRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
+        }
+    }
+
+    @ViewBuilder
+    private func noteRow(label: String, note: PointNote?, color: Color, onAdd: @escaping () -> Void, onEdit: @escaping () -> Void) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(color)
+                .frame(width: 16, alignment: .leading)
+
+            if let note = note {
+                HStack(spacing: 4) {
+                    if let howWon = note.howWon {
+                        Text(howWon.rawValue)
+                            .font(.caption2)
+                            .foregroundColor(.white)
+                    }
+                    if let attitude = note.attitude {
+                        Text(attitude.rawValue)
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                    if let additionalNotes = note.additionalNotes, !additionalNotes.isEmpty {
+                        Text(additionalNotes)
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                            .lineLimit(1)
+                    }
+                }
+
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray)
+                }
+            } else {
+                Button(action: onAdd) {
+                    Text("Add")
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                }
+            }
         }
     }
 }

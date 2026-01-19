@@ -7,12 +7,23 @@ import SwiftUI
 
 struct NoteEntryView: View {
     let playerName: String
+    let existingNote: PointNote?
     let onSave: (PointNote) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedHowWon: HowPointWon?
     @State private var selectedAttitude: Attitude?
     @State private var additionalNotes: String = ""
+
+    init(playerName: String, existingNote: PointNote? = nil, onSave: @escaping (PointNote) -> Void) {
+        self.playerName = playerName
+        self.existingNote = existingNote
+        self.onSave = onSave
+        // Prefill from existing note
+        _selectedHowWon = State(initialValue: existingNote?.howWon)
+        _selectedAttitude = State(initialValue: existingNote?.attitude)
+        _additionalNotes = State(initialValue: existingNote?.additionalNotes ?? "")
+    }
 
     var body: some View {
         ZStack {

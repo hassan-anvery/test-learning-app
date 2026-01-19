@@ -48,6 +48,21 @@ struct MatchChartingView: View {
         return game.playerAPoints >= 3 && game.playerBPoints >= 3 && game.playerAPoints == game.playerBPoints
     }
 
+    private var hasRecordedPoints: Bool {
+        match.sets.contains { $0.games.contains { !$0.points.isEmpty } }
+    }
+
+    private var lastPointNotes: (playerA: PointNote?, playerB: PointNote?) {
+        for set in match.sets.reversed() {
+            for game in set.games.reversed() {
+                if let point = game.points.last {
+                    return (point.note, point.playerBNote)
+                }
+            }
+        }
+        return (nil, nil)
+    }
+
     var body: some View {
         ZStack {
             Color.black
@@ -126,6 +141,8 @@ struct MatchChartingView: View {
                                     .stroke(Color.white, lineWidth: 1)
                             )
                     }
+                    .disabled(!hasRecordedPoints)
+                    .opacity(hasRecordedPoints ? 1.0 : 0.4)
 
                     Spacer()
 
@@ -158,6 +175,8 @@ struct MatchChartingView: View {
                                     .stroke(Color.white, lineWidth: 1)
                             )
                     }
+                    .disabled(!hasRecordedPoints)
+                    .opacity(hasRecordedPoints ? 1.0 : 0.4)
                 }
                 .padding(.horizontal)
 
@@ -191,19 +210,23 @@ struct MatchChartingView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showNoteForPlayerA) {
-            NoteEntryView(playerName: match.playerAName) { note in
+        .fullScreenCover(isPresented: $showNoteForPlayerA) {
+            NoteEntryView(
+                playerName: match.playerAName,
+                existingNote: lastPointNotes.playerA
+            ) { note in
                 addNoteToLastPoint(for: .playerA, note: note)
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled(true)
         }
-        .sheet(isPresented: $showNoteForPlayerB) {
-            NoteEntryView(playerName: match.playerBName) { note in
+        .fullScreenCover(isPresented: $showNoteForPlayerB) {
+            NoteEntryView(
+                playerName: match.playerBName,
+                existingNote: lastPointNotes.playerB
+            ) { note in
                 addNoteToLastPoint(for: .playerB, note: note)
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled(true)
         }
         .onChange(of: match.isCompleted) { _, isCompleted in
             if isCompleted {
@@ -342,7 +365,11 @@ struct MatchChartingView: View {
                 if let pointIndex = match.sets[setIndex].games[gameIndex].points.indices.last {
                     var noteWithSubject = note
                     noteWithSubject.playerSubject = player
-                    match.sets[setIndex].games[gameIndex].points[pointIndex].note = noteWithSubject
+                    if player == .playerA {
+                        match.sets[setIndex].games[gameIndex].points[pointIndex].note = noteWithSubject
+                    } else {
+                        match.sets[setIndex].games[gameIndex].points[pointIndex].playerBNote = noteWithSubject
+                    }
                     MatchStore.shared.updateMatch(match)
                     return
                 }

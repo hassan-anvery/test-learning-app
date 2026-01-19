@@ -228,13 +228,15 @@ enum GameScore: String {
 struct Point: Codable, Identifiable {
     let id: UUID
     var winner: PlayerSide
-    var note: PointNote?
+    var note: PointNote?           // Player A note
+    var playerBNote: PointNote?    // Player B note
     var timestamp: Date
 
     init(id: UUID = UUID(), winner: PlayerSide, note: PointNote? = nil) {
         self.id = id
         self.winner = winner
         self.note = note
+        self.playerBNote = nil
         self.timestamp = Date()
     }
 }
