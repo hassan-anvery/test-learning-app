@@ -29,9 +29,15 @@ struct HomeView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Top bar with logo and profile
+                // Top bar with stats and profile
                 HStack {
-                    TennisBallLogo(size: 32)
+                    Button {
+                        showStats = true
+                    } label: {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    }
 
                     Spacer()
 
@@ -94,8 +100,7 @@ struct HomeView: View {
 
                 // Bottom tab bar
                 BottomTabBar(
-                    onPlusPressed: { showMatchSetup = true },
-                    onStatsPressed: { showStats = true }
+                    onPlusPressed: { showMatchSetup = true }
                 )
             }
         }
@@ -170,31 +175,16 @@ struct MatchRowView: View {
 
 struct BottomTabBar: View {
     let onPlusPressed: () -> Void
-    let onStatsPressed: () -> Void
 
     var body: some View {
-        ZStack {
-            // Plus button - centered
-            Button(action: onPlusPressed) {
-                Image(systemName: "plus")
-                    .font(.title)
-                    .foregroundColor(.black)
-                    .frame(width: 50, height: 50)
-                    .background(Color.white)
-                    .clipShape(Circle())
-            }
-
-            // Stats button - right aligned
-            HStack {
-                Spacer()
-                Button(action: onStatsPressed) {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-            }
+        Button(action: onPlusPressed) {
+            Image(systemName: "plus")
+                .font(.title)
+                .foregroundColor(.black)
+                .frame(width: 50, height: 50)
+                .background(Color.white)
+                .clipShape(Circle())
         }
-        .padding(.horizontal, 40)
         .padding(.vertical, 16)
         .background(Color.black)
     }
