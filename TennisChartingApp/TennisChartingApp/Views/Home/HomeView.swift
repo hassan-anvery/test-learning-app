@@ -78,13 +78,11 @@ struct HomeView: View {
                                 selectedMatch = match
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                if match.isCompleted {
-                                    Button(role: .destructive) {
-                                        matchToDelete = match
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
+                                Button(role: .destructive) {
+                                    matchToDelete = match
+                                    showDeleteConfirmation = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
                                 }
                             }
                     }
