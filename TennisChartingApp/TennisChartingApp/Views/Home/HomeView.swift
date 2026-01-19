@@ -96,7 +96,6 @@ struct HomeView: View {
 
                 // Bottom tab bar
                 BottomTabBar(
-                    onHomePressed: { },
                     onPlusPressed: { showMatchSetup = true },
                     onStatsPressed: { showStats = true }
                 )
@@ -172,19 +171,12 @@ struct MatchRowView: View {
 }
 
 struct BottomTabBar: View {
-    let onHomePressed: () -> Void
     let onPlusPressed: () -> Void
     let onStatsPressed: () -> Void
 
     var body: some View {
-        HStack {
-            Button(action: onHomePressed) {
-                Image(systemName: "house.fill")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-            }
-
+        ZStack {
+            // Plus button - centered
             Button(action: onPlusPressed) {
                 Image(systemName: "plus")
                     .font(.title)
@@ -194,11 +186,14 @@ struct BottomTabBar: View {
                     .clipShape(Circle())
             }
 
-            Button(action: onStatsPressed) {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
+            // Stats button - right aligned
+            HStack {
+                Spacer()
+                Button(action: onStatsPressed) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                }
             }
         }
         .padding(.horizontal, 40)
