@@ -100,11 +100,11 @@ struct MatchSetupView: View {
 
                 TextField("Your player", text: $playerAName)
                     .focused($focusedField, equals: .playerA)
-                    .textFieldStyle(.plain)
                     .padding()
                     .background(Color.white.opacity(0.1))
                     .cornerRadius(8)
                     .foregroundColor(.white)
+                    .tint(.white)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -113,11 +113,11 @@ struct MatchSetupView: View {
 
                 TextField("Opponent", text: $playerBName)
                     .focused($focusedField, equals: .playerB)
-                    .textFieldStyle(.plain)
                     .padding()
                     .background(Color.white.opacity(0.1))
                     .cornerRadius(8)
                     .foregroundColor(.white)
+                    .tint(.white)
             }
 
             if currentStep == .playerNames {
