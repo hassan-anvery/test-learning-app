@@ -65,137 +65,29 @@ struct MatchChartingView: View {
 
     var body: some View {
         ZStack {
-            Color.black
+            Color(UIColor.systemGray6)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Top bar
-                HStack {
-                    Button {
-                        showEndMatchConfirmation = true
-                    } label: {
-                        Text("End Match")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
-                    }
+                topBar
 
-                    Spacer()
+                Spacer()
 
-                    Text(match.playerAName)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
+                playerABlock
 
-                    Spacer()
+                Spacer()
 
-                    Button {
-                        showMatchScore = true
-                    } label: {
-                        Text("Match Score")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
-                    }
-                }
-                .padding()
+                scoreCard
 
-                // Player A scoring area (top half)
-                Button {
-                    scorePoint(for: .playerA)
-                } label: {
-                    VStack {
-                        Spacer()
-                        Text(playerAGameScore)
-                            .font(.system(size: 120, weight: .bold))
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                Spacer()
 
-                // Middle divider with VS and note buttons
-                HStack {
-                    Button {
-                        showNoteForPlayerA = true
-                    } label: {
-                        Text("Note")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
-                    }
-                    .disabled(!hasRecordedPoints)
-                    .opacity(hasRecordedPoints ? 1.0 : 0.4)
+                playerBBlock
 
-                    Spacer()
+                Spacer()
 
-                    // VS circle
-                    ZStack {
-                        Circle()
-                            .stroke(Color.white, lineWidth: 2)
-                            .frame(width: 50, height: 50)
-                        Text("VS")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    }
-
-                    Text(match.playerBName)
-                        .font(.title3)
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Button {
-                        showNoteForPlayerB = true
-                    } label: {
-                        Text("Note")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
-                    }
-                    .disabled(!hasRecordedPoints)
-                    .opacity(hasRecordedPoints ? 1.0 : 0.4)
-                }
-                .padding(.horizontal)
-
-                // Player B scoring area (bottom half)
-                Button {
-                    scorePoint(for: .playerB)
-                } label: {
-                    VStack {
-                        Spacer()
-                        Text(playerBGameScore)
-                            .font(.system(size: 120, weight: .bold))
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                notesBar
             }
+            .padding(.bottom, 16)
         }
         .alert("End Match", isPresented: $showEndMatchConfirmation) {
             Button("Yes", role: .destructive) {
@@ -235,6 +127,175 @@ struct MatchChartingView: View {
             }
         }
     }
+
+    // MARK: - UI Components
+
+    private var topBar: some View {
+        HStack {
+            // End Match button
+            Button {
+                showEndMatchConfirmation = true
+            } label: {
+                Text("End Match")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            }
+
+            Spacer()
+
+            // Set indicator
+            VStack(spacing: 2) {
+                Text("SET \(match.sets.count)")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.gray)
+                Text("\(currentSet.playerAGames)-\(currentSet.playerBGames)")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.black)
+            }
+
+            Spacer()
+
+            // Match Score button
+            Button {
+                showMatchScore = true
+            } label: {
+                Text("Stats")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+    }
+
+    private var playerABlock: some View {
+        Button {
+            scorePoint(for: .playerA)
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                Text(match.playerAName)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.black)
+                Text("Tap to award point")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+    }
+
+    private var scoreCard: some View {
+        VStack(spacing: 8) {
+            Text("GAME SCORE")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.gray)
+
+            HStack(spacing: 24) {
+                Text(playerAGameScore)
+                    .font(.system(size: 48, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(minWidth: 60)
+
+                Text("-")
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundColor(.gray)
+
+                Text(playerBGameScore)
+                    .font(.system(size: 48, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(minWidth: 60)
+            }
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 20)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+        .padding(.horizontal, 40)
+    }
+
+    private var playerBBlock: some View {
+        Button {
+            scorePoint(for: .playerB)
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                Text(match.playerBName)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.black)
+                Text("Tap to award point")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+    }
+
+    private var notesBar: some View {
+        HStack(spacing: 16) {
+            // Note for Player A
+            Button {
+                showNoteForPlayerA = true
+            } label: {
+                Text("Note - \(match.playerAName)")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(hasRecordedPoints ? .black : .gray)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white)
+                    .cornerRadius(24)
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            }
+            .disabled(!hasRecordedPoints)
+
+            // Note for Player B
+            Button {
+                showNoteForPlayerB = true
+            } label: {
+                Text("Note - \(match.playerBName)")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(hasRecordedPoints ? .black : .gray)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white)
+                    .cornerRadius(24)
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            }
+            .disabled(!hasRecordedPoints)
+        }
+        .padding(.horizontal, 20)
+    }
+
+    // MARK: - Scoring Logic
 
     private func scorePoint(for player: PlayerSide) {
         // Ensure we have a current set and game
