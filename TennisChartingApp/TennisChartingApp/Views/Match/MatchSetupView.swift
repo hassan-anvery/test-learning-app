@@ -5,12 +5,6 @@
 
 import SwiftUI
 
-enum MatchSetupStep: Int, CaseIterable {
-    case playerNames = 0
-    case whoIsServing = 1
-    case matchFormat = 2
-}
-
 enum FocusedField {
     case playerA
     case playerB
@@ -19,7 +13,6 @@ enum FocusedField {
 struct MatchSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: FocusedField?
-    @State private var currentStep: MatchSetupStep = .playerNames
     @State private var playerAName = ""
     @State private var playerBName = ""
     @State private var firstServer: PlayerSide?
@@ -27,53 +20,41 @@ struct MatchSetupView: View {
     @State private var navigateToMatch = false
     @State private var createdMatch: Match?
 
+    private var canStartMatch: Bool {
+        !playerAName.isEmpty && !playerBName.isEmpty && firstServer != nil
+    }
+
     var body: some View {
         ZStack {
-            Color.black
+            Color(UIColor.systemGray6)
                 .ignoresSafeArea()
 
-            VStack(spacing: 30) {
-                // Header with back button
-                HStack {
-                    Button {
-                        if currentStep == .playerNames {
-                            dismiss()
-                        } else {
-                            withAnimation {
-                                goToPreviousStep()
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
+            VStack(spacing: 0) {
+                // Header
+                headerView
 
-                    Spacer()
-                }
-                .padding(.horizontal)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        // Heading
+                        headingSection
 
-                Spacer()
+                        // Player name cards
+                        playerNameCards
 
-                // Content based on step
-                VStack(spacing: 24) {
-                    if currentStep.rawValue >= MatchSetupStep.playerNames.rawValue {
-                        playerNamesSection
-                    }
+                        // Serving first
+                        servingFirstSection
 
-                    if currentStep.rawValue >= MatchSetupStep.whoIsServing.rawValue {
-                        whoIsServingSection
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    }
-
-                    if currentStep.rawValue >= MatchSetupStep.matchFormat.rawValue {
+                        // Match format
                         matchFormatSection
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
                 }
-                .padding(.horizontal, 24)
 
-                Spacer()
+                // Bottom CTA
+                startMatchButton
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
             }
         }
         .fullScreenCover(item: $createdMatch) { match in
@@ -92,158 +73,150 @@ struct MatchSetupView: View {
         }
     }
 
-    private var playerNamesSection: some View {
+    private var headerView: some View {
+        HStack {
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.black)
+            }
+
+            Spacer()
+
+            Text("New Match")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            Spacer()
+
+            Button { dismiss() } label: {
+                Text("Cancel")
+                    .font(.system(size: 17))
+                    .foregroundColor(.black)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+    }
+
+    private var headingSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Enter player names")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.black)
+            Text("Assign the sides for today's match")
+                .font(.system(size: 15))
+                .foregroundColor(.gray)
+        }
+    }
+
+    private var playerNameCards: some View {
         VStack(spacing: 16) {
+            // Player 1 card
             VStack(alignment: .leading, spacing: 8) {
-                Text("Player A name:")
-                    .foregroundColor(.white)
-
-                TextField("Your player", text: $playerAName)
+                Text("PLAYER 1 NAME")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.gray)
+                TextField("e.g. Roger Federer", text: $playerAName)
                     .focused($focusedField, equals: .playerA)
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(8)
-                    .foregroundColor(.white)
-                    .tint(.white)
+                    .font(.system(size: 17))
+                    .foregroundColor(.black)
             }
+            .padding(16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
 
+            // Player 2 card
             VStack(alignment: .leading, spacing: 8) {
-                Text("Player B name:")
-                    .foregroundColor(.white)
-
-                TextField("Opponent", text: $playerBName)
+                Text("PLAYER 2 NAME")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.gray)
+                TextField("e.g. Rafael Nadal", text: $playerBName)
                     .focused($focusedField, equals: .playerB)
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(8)
-                    .foregroundColor(.white)
-                    .tint(.white)
+                    .font(.system(size: 17))
+                    .foregroundColor(.black)
             }
+            .padding(16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        }
+    }
 
-            if currentStep == .playerNames {
-                nextButton(enabled: !playerAName.isEmpty && !playerBName.isEmpty) {
-                    withAnimation {
-                        currentStep = .whoIsServing
-                    }
-                }
+    private var servingFirstSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Who's serving first?")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            HStack(spacing: 16) {
+                serverButton(side: .playerA, label: "A", name: playerAName)
+                serverButton(side: .playerB, label: "B", name: playerBName)
             }
         }
     }
 
-    private var whoIsServingSection: some View {
-        VStack(spacing: 16) {
-            Text("Who's serving first?")
-                .foregroundColor(.white)
-                .font(.headline)
-
-            HStack(spacing: 24) {
-                playerSelectionButton(
-                    label: "A",
-                    sublabel: playerAName,
-                    isSelected: firstServer == .playerA
-                ) {
-                    firstServer = .playerA
-                }
-
-                playerSelectionButton(
-                    label: "B",
-                    sublabel: playerBName,
-                    isSelected: firstServer == .playerB
-                ) {
-                    firstServer = .playerB
+    private func serverButton(side: PlayerSide, label: String, name: String) -> some View {
+        Button {
+            firstServer = side
+        } label: {
+            HStack(spacing: 8) {
+                Text(label)
+                    .font(.system(size: 17, weight: .bold))
+                if !name.isEmpty {
+                    Text(name)
+                        .font(.system(size: 15))
+                        .lineLimit(1)
                 }
             }
-
-            if currentStep == .whoIsServing {
-                nextButton(enabled: firstServer != nil) {
-                    withAnimation {
-                        currentStep = .matchFormat
-                    }
-                }
-            }
+            .foregroundColor(firstServer == side ? .white : .black)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(firstServer == side ? Color(red: 0.18, green: 0.55, blue: 0.45) : Color.white)
+            .cornerRadius(24)
+            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
         }
     }
 
     private var matchFormatSection: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Match Format")
-                .foregroundColor(.white)
-                .font(.headline)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
 
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 ForEach(MatchFormat.allCases, id: \.self) { format in
                     Button {
                         matchFormat = format
                     } label: {
                         Text(format.displayName)
-                            .font(.subheadline)
-                            .foregroundColor(matchFormat == format ? .black : .white)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(matchFormat == format ? .white : .black)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
-                            .background(matchFormat == format ? Color.white : Color.white.opacity(0.2))
-                            .cornerRadius(8)
+                            .background(matchFormat == format ? Color(red: 0.18, green: 0.55, blue: 0.45) : Color.white)
+                            .cornerRadius(20)
+                            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
                     }
                 }
             }
-
-            Button {
-                startMatch()
-            } label: {
-                Text("Start Match")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.green)
-                    .cornerRadius(8)
-            }
-            .padding(.top, 20)
         }
     }
 
-    private func playerSelectionButton(
-        label: String,
-        sublabel: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Text(label)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                Text(sublabel)
-                    .font(.caption)
-            }
-            .foregroundColor(isSelected ? .black : .white)
-            .frame(width: 80, height: 80)
-            .background(isSelected ? Color.white : Color.white.opacity(0.2))
-            .clipShape(Circle())
+    private var startMatchButton: some View {
+        Button {
+            startMatch()
+        } label: {
+            Text("Start Match")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(canStartMatch ? Color(red: 0.18, green: 0.55, blue: 0.45) : Color.gray)
+                .cornerRadius(28)
         }
-    }
-
-    private func nextButton(enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text("Next")
-                .font(.headline)
-                .foregroundColor(enabled ? .black : .gray)
-                .padding(.horizontal, 40)
-                .padding(.vertical, 12)
-                .background(enabled ? Color.white : Color.white.opacity(0.3))
-                .cornerRadius(8)
-        }
-        .disabled(!enabled)
-    }
-
-    private func goToPreviousStep() {
-        switch currentStep {
-        case .playerNames:
-            break
-        case .whoIsServing:
-            currentStep = .playerNames
-        case .matchFormat:
-            currentStep = .whoIsServing
-        }
+        .disabled(!canStartMatch)
     }
 
     private func startMatch() {
