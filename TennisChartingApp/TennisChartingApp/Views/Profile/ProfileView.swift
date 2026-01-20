@@ -91,6 +91,7 @@ struct ProfileView: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .alert("Log Out", isPresented: $showLogoutConfirmation) {
                 Button("Yes", role: .destructive) {
+                    UserDefaults.standard.set(false, forKey: "hasSeenWelcome")
                     AuthManager.shared.logout()
                     dismiss()
                 }
