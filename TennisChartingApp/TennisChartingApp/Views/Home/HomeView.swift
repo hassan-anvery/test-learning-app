@@ -12,20 +12,10 @@ struct HomeView: View {
     @State private var selectedMatch: Match?
     @State private var matchToDelete: Match?
     @State private var showDeleteConfirmation = false
-    @State private var searchText = ""
-
-    private var filteredMatches: [Match] {
-        if searchText.isEmpty {
-            return MatchStore.shared.matches
-        }
-        return MatchStore.shared.matches.filter { match in
-            match.playerBName.localizedCaseInsensitiveContains(searchText)
-        }
-    }
 
     var body: some View {
         ZStack {
-            Color.black
+            Color(UIColor.systemGray6)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -35,8 +25,8 @@ struct HomeView: View {
                         showStats = true
                     } label: {
                         Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.title)
-                            .foregroundColor(.white)
+                            .font(.title2)
+                            .foregroundColor(.black)
                     }
 
                     Spacer()
@@ -45,41 +35,33 @@ struct HomeView: View {
                         showProfile = true
                     } label: {
                         Image(systemName: "person.circle")
-                            .font(.title)
-                            .foregroundColor(.white)
+                            .font(.title2)
+                            .foregroundColor(.black)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
                 .padding(.top, 8)
 
-                // Search bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
+                // Header
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Match History")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.black)
+                    Text("Matches this month")
+                        .font(.system(size: 15))
                         .foregroundColor(.gray)
-                    TextField("Search opponent name", text: $searchText)
-                        .foregroundColor(.white)
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
-                        }
-                    }
                 }
-                .padding()
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(8)
-                .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
                 .padding(.top, 16)
 
                 // Match list
                 List {
-                    ForEach(filteredMatches) { match in
+                    ForEach(MatchStore.shared.matches) { match in
                         MatchRowView(match: match)
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                            .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
                             .onTapGesture {
                                 selectedMatch = match
                             }
@@ -135,41 +117,74 @@ struct HomeView: View {
 struct MatchRowView: View {
     let match: Match
 
+    private var dateString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM dd"
+        return formatter.string(from: match.date).uppercased()
+    }
+
+    private var badgeText: String {
+        if match.winner == .playerA { return "WIN" }
+        if match.winner == .playerB { return "LOSS" }
+        return "IN PROGRESS"
+    }
+
+    private var badgeColor: Color {
+        if match.winner == .playerA { return Color(red: 0.18, green: 0.55, blue: 0.45) }
+        if match.winner == .playerB { return Color(red: 0.8, green: 0.3, blue: 0.3) }
+        return Color.gray
+    }
+
     var body: some View {
-        VStack(spacing: 8) {
-            // Player A row
+        VStack(alignment: .leading, spacing: 12) {
+            // Top row: date + badge
             HStack {
-                Text(match.playerAName)
-                    .foregroundColor(.white)
-                    .fontWeight(match.winner == .playerA ? .bold : .regular)
+                Text(dateString)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.gray)
                 Spacer()
-                HStack(spacing: 12) {
-                    ForEach(Array(match.sets.enumerated()), id: \.offset) { _, set in
-                        Text("\(set.playerAGames)")
-                            .foregroundColor(.white)
-                            .frame(width: 20)
-                    }
-                }
+                Text(badgeText)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(badgeColor)
+                    .cornerRadius(10)
             }
 
-            // Player B row
-            HStack {
-                Text(match.playerBName)
-                    .foregroundColor(.gray)
-                    .fontWeight(match.winner == .playerB ? .bold : .regular)
-                Spacer()
-                HStack(spacing: 12) {
-                    ForEach(Array(match.sets.enumerated()), id: \.offset) { _, set in
-                        Text("\(set.playerBGames)")
-                            .foregroundColor(.gray)
-                            .frame(width: 20)
+            // Match title
+            Text("\(match.playerAName) vs. \(match.playerBName)")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            // Scores - two row layout
+            if !match.sets.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    // Player A scores (larger)
+                    HStack(spacing: 16) {
+                        ForEach(match.sets) { set in
+                            Text("\(set.playerAGames)")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.black)
+                                .frame(width: 24)
+                        }
+                    }
+                    // Player B scores (smaller, gray)
+                    HStack(spacing: 16) {
+                        ForEach(match.sets) { set in
+                            Text("\(set.playerBGames)")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.gray)
+                                .frame(width: 24)
+                        }
                     }
                 }
             }
         }
-        .padding()
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(12)
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -180,13 +195,12 @@ struct BottomTabBar: View {
         Button(action: onPlusPressed) {
             Image(systemName: "plus")
                 .font(.title)
-                .foregroundColor(.black)
+                .foregroundColor(.white)
                 .frame(width: 50, height: 50)
-                .background(Color.white)
+                .background(Color(red: 0.18, green: 0.55, blue: 0.45))
                 .clipShape(Circle())
         }
         .padding(.vertical, 16)
-        .background(Color.black)
     }
 }
 
