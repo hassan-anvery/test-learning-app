@@ -11,97 +11,183 @@ struct SignUpView: View {
     @State private var password = ""
     @State private var errorMessage: String?
     @State private var isLoading = false
+    @State private var isPasswordVisible = false
+    @State private var showLogin = false
+
+    private let brandGreen = Color(red: 0.18, green: 0.55, blue: 0.45)
 
     private var isFormValid: Bool {
         !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !password.isEmpty
+        password.count >= 8
     }
 
     var body: some View {
         ZStack {
-            Color.black
+            Color.white
                 .ignoresSafeArea()
 
-            VStack(spacing: 30) {
-                Spacer()
+            VStack(alignment: .leading, spacing: 0) {
+                // Top nav row
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.black)
+                    }
+                    Spacer()
+                    Text("Create Account")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.black)
+                    Spacer()
+                    // Invisible spacer for centering
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.clear)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
 
-                // Header
-                Text("Create Account")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+                Spacer()
+                    .frame(height: 40)
+
+                // Main heading
+                Text("Get Started")
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 24)
+
+                Spacer()
+                    .frame(height: 8)
+
+                // Subtitle
+                Text("Analyze matches with professional precision.")
+                    .font(.system(size: 17))
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 24)
+
+                Spacer()
+                    .frame(height: 32)
 
                 // Form fields
-                VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Email field
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Email:")
-                            .foregroundColor(.white)
-                            .font(.headline)
+                        Text("Email Address")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.black)
 
-                        TextField("", text: $email)
-                            .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
+                        TextField("coach@example.com", text: $email)
+                            .font(.system(size: 17))
+                            .padding(.horizontal, 20)
+                            .frame(height: 52)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(26)
                             .textInputAutocapitalization(.never)
                             .keyboardType(.emailAddress)
                             .textContentType(.emailAddress)
                     }
 
+                    // Password field
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Password:")
-                            .foregroundColor(.white)
-                            .font(.headline)
+                        Text("Password")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.black)
 
-                        SecureField("", text: $password)
-                            .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
-                            .textContentType(.newPassword)
+                        HStack {
+                            if isPasswordVisible {
+                                TextField("", text: $password)
+                                    .font(.system(size: 17))
+                                    .textContentType(.newPassword)
+                            } else {
+                                SecureField("", text: $password)
+                                    .font(.system(size: 17))
+                                    .textContentType(.newPassword)
+                            }
+                            Button {
+                                isPasswordVisible.toggle()
+                            } label: {
+                                Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .frame(height: 52)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(26)
+
+                        // Password hints
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "checkmark.circle")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.gray)
+                                Text("At least 8 characters")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.gray)
+                            }
+                            HStack(spacing: 8) {
+                                Image(systemName: "checkmark.circle")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.gray)
+                                Text("Include a symbol or number")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding(.top, 8)
                     }
                 }
-                .padding(.horizontal, 40)
+                .padding(.horizontal, 24)
 
                 // Error message
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .font(.subheadline)
-                        .padding(.horizontal)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
                 }
 
                 Spacer()
 
                 // Begin button
-                Button {
-                    signUp()
-                } label: {
-                    Text("Begin")
-                        .font(.headline)
-                        .foregroundColor(isFormValid ? .black : .gray)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(isFormValid ? Color.white : Color.white.opacity(0.3))
-                        .cornerRadius(8)
+                VStack(spacing: 16) {
+                    Button {
+                        signUp()
+                    } label: {
+                        Text("Begin")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(isFormValid ? .white : .gray)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(isFormValid ? brandGreen : Color(.systemGray5))
+                            .cornerRadius(28)
+                    }
+                    .disabled(!isFormValid || isLoading)
+
+                    // Footer
+                    HStack(spacing: 4) {
+                        Text("Already have an account?")
+                            .font(.system(size: 15))
+                            .foregroundColor(.gray)
+                        Button {
+                            showLogin = true
+                        } label: {
+                            Text("Log in")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(brandGreen)
+                        }
+                    }
                 }
-                .disabled(!isFormValid || isLoading)
-                .padding(.horizontal, 40)
-                .padding(.bottom, 60)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
-                }
-            }
+        .navigationDestination(isPresented: $showLogin) {
+            LoginView()
         }
     }
 
