@@ -9,13 +9,18 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var authManager = AuthManager.shared
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
 
     var body: some View {
         Group {
             if authManager.isAuthenticated {
                 HomeView()
-            } else {
+            } else if hasSeenWelcome {
                 OpeningView()
+            } else {
+                WelcomeView {
+                    hasSeenWelcome = true
+                }
             }
         }
     }
