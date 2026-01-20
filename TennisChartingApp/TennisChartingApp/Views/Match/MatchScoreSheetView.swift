@@ -11,99 +11,115 @@ struct MatchScoreSheetView: View {
 
     var body: some View {
         ZStack {
-            Color.black
+            Color(UIColor.systemGray6)
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {
-                // Header
+                // Header with Done button
                 HStack {
-                    Spacer()
                     Text("Match Score")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    Spacer()
-                }
-                .padding(.top)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.black)
 
-                // Score table
+                    Spacer()
+
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+
+                // Score card
                 VStack(spacing: 0) {
-                    // Header row
+                    // Column headers
                     HStack(spacing: 0) {
                         Text("")
-                            .frame(width: 120, alignment: .leading)
+                            .frame(width: 140, alignment: .leading)
 
                         ForEach(0..<match.sets.count, id: \.self) { setIndex in
                             Text("Set \(setIndex + 1)")
-                                .font(.caption)
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.gray)
                                 .frame(width: 50)
                         }
 
                         Text("Game")
-                            .font(.caption)
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.gray)
                             .frame(width: 50)
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
 
                     Divider()
-                        .background(Color.gray)
 
                     // Player A row
                     HStack(spacing: 0) {
-                        Text(match.playerAName)
-                            .foregroundColor(.white)
-                            .fontWeight(match.winner == .playerA ? .bold : .regular)
-                            .frame(width: 120, alignment: .leading)
+                        HStack(spacing: 10) {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+
+                            Text(match.playerAName)
+                                .font(.system(size: 16, weight: match.winner == .playerA ? .bold : .medium))
+                                .foregroundColor(.black)
+                        }
+                        .frame(width: 140, alignment: .leading)
 
                         ForEach(0..<match.sets.count, id: \.self) { setIndex in
                             Text("\(match.sets[setIndex].playerAGames)")
-                                .foregroundColor(.white)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.black)
                                 .frame(width: 50)
                         }
 
                         Text(currentGameScore(for: .playerA))
-                            .foregroundColor(.green)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
                             .frame(width: 50)
                     }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 16)
 
                     Divider()
-                        .background(Color.gray)
 
                     // Player B row
                     HStack(spacing: 0) {
-                        Text(match.playerBName)
-                            .foregroundColor(.white)
-                            .fontWeight(match.winner == .playerB ? .bold : .regular)
-                            .frame(width: 120, alignment: .leading)
+                        HStack(spacing: 10) {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+
+                            Text(match.playerBName)
+                                .font(.system(size: 16, weight: match.winner == .playerB ? .bold : .medium))
+                                .foregroundColor(.black)
+                        }
+                        .frame(width: 140, alignment: .leading)
 
                         ForEach(0..<match.sets.count, id: \.self) { setIndex in
                             Text("\(match.sets[setIndex].playerBGames)")
-                                .foregroundColor(.white)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.black)
                                 .frame(width: 50)
                         }
 
                         Text(currentGameScore(for: .playerB))
-                            .foregroundColor(.green)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
                             .frame(width: 50)
                     }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 16)
                 }
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(12)
-                .padding(.horizontal)
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+                .padding(.horizontal, 20)
 
                 Spacer()
-
-                Text("Swipe down to return")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.bottom)
             }
         }
     }

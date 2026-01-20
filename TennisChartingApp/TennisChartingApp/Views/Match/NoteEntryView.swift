@@ -25,95 +25,135 @@ struct NoteEntryView: View {
         _additionalNotes = State(initialValue: existingNote?.additionalNotes ?? "")
     }
 
+    private let accentGreen = Color(red: 0.18, green: 0.55, blue: 0.45)
+
     var body: some View {
         ZStack {
-            Color.black
+            Color(UIColor.systemGray6)
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Header
-                    HStack {
-                        Text("\(playerName) Notes")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding(.top)
+            VStack(spacing: 0) {
+                // Header with Done button
+                HStack {
+                    Text("\(playerName) Notes")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.black)
 
-                    // How was the point won?
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("How was the point won?")
-                            .foregroundColor(.white)
-                            .font(.headline)
+                    Spacer()
 
-                        FlowLayout(spacing: 8) {
-                            ForEach(HowPointWon.allCases, id: \.self) { option in
-                                SelectableChip(
-                                    title: option.rawValue,
-                                    isSelected: selectedHowWon == option
-                                ) {
-                                    selectedHowWon = option
-                                }
-                            }
-                        }
-                    }
-
-                    // Attitude
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Attitude")
-                            .foregroundColor(.white)
-                            .font(.headline)
-
-                        FlowLayout(spacing: 8) {
-                            ForEach(Attitude.allCases, id: \.self) { option in
-                                SelectableChip(
-                                    title: option.rawValue,
-                                    isSelected: selectedAttitude == option
-                                ) {
-                                    selectedAttitude = option
-                                }
-                            }
-                        }
-                    }
-
-                    // Notes text box
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Notes:")
-                            .foregroundColor(.white)
-                            .font(.headline)
-
-                        TextEditor(text: $additionalNotes)
-                            .frame(minHeight: 100)
-                            .padding(8)
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
-                            .scrollContentBackground(.hidden)
-                    }
-
-                    // Save button
-                    Button {
-                        let note = PointNote(
-                            howWon: selectedHowWon,
-                            attitude: selectedAttitude,
-                            additionalNotes: additionalNotes.isEmpty ? nil : additionalNotes
-                        )
-                        onSave(note)
+                    Button("Done") {
                         dismiss()
-                    } label: {
-                        Text("Save Note")
-                            .font(.headline)
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.white)
-                            .cornerRadius(8)
                     }
-                    .padding(.top, 16)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(accentGreen)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 16)
+
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // How was the point won? card
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("How was the point won?")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.black)
+
+                            FlowLayout(spacing: 8) {
+                                ForEach(HowPointWon.allCases, id: \.self) { option in
+                                    SelectableChip(
+                                        title: option.rawValue,
+                                        isSelected: selectedHowWon == option
+                                    ) {
+                                        selectedHowWon = option
+                                    }
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+
+                        // Attitude card
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Attitude")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.black)
+
+                            FlowLayout(spacing: 8) {
+                                ForEach(Attitude.allCases, id: \.self) { option in
+                                    SelectableChip(
+                                        title: option.rawValue,
+                                        isSelected: selectedAttitude == option
+                                    ) {
+                                        selectedAttitude = option
+                                    }
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+
+                        // Notes card
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Notes")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.black)
+
+                            ZStack(alignment: .topLeading) {
+                                if additionalNotes.isEmpty {
+                                    Text("Type note...")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.gray)
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 8)
+                                }
+                                TextEditor(text: $additionalNotes)
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.black)
+                                    .frame(minHeight: 100)
+                                    .scrollContentBackground(.hidden)
+                                    .background(Color.clear)
+                            }
+                            .padding(12)
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(12)
+                        }
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
+                }
+
+                // Save button (outside ScrollView, fixed at bottom)
+                Button {
+                    let note = PointNote(
+                        howWon: selectedHowWon,
+                        attitude: selectedAttitude,
+                        additionalNotes: additionalNotes.isEmpty ? nil : additionalNotes
+                    )
+                    onSave(note)
+                    dismiss()
+                } label: {
+                    Text("Save Note")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(accentGreen)
+                        .cornerRadius(25)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
             }
         }
     }
@@ -124,15 +164,21 @@ struct SelectableChip: View {
     let isSelected: Bool
     let onTap: () -> Void
 
+    private let accentGreen = Color(red: 0.18, green: 0.55, blue: 0.45)
+
     var body: some View {
         Button(action: onTap) {
             Text(title)
-                .font(.subheadline)
-                .foregroundColor(isSelected ? .black : .white)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(isSelected ? accentGreen : .black)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(isSelected ? Color.white : Color.white.opacity(0.2))
+                .background(isSelected ? accentGreen.opacity(0.15) : Color.white)
                 .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isSelected ? accentGreen : Color.gray.opacity(0.3), lineWidth: 1)
+                )
         }
     }
 }
