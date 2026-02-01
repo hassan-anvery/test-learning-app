@@ -12,20 +12,25 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black
+                Color(red: 0.96, green: 0.96, blue: 0.96)
                     .ignoresSafeArea()
 
                 VStack(spacing: 24) {
                     // Profile icon
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.gray)
-                        .padding(.top, 40)
+                    ZStack {
+                        Circle()
+                            .fill(Color.gray.opacity(0.15))
+                            .frame(width: 100, height: 100)
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.top, 40)
 
                     // Email
                     if let user = AuthManager.shared.currentUser {
                         Text(user.email)
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                             .font(.headline)
                     }
 
@@ -35,25 +40,26 @@ struct ProfileView: View {
                     VStack(spacing: 16) {
                         HStack {
                             Text("Total Matches")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                             Spacer()
                             Text("\(MatchStore.shared.matches.count)")
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .fontWeight(.bold)
                         }
 
                         HStack {
                             Text("Completed Matches")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                             Spacer()
                             Text("\(MatchStore.shared.matches.filter { $0.isCompleted }.count)")
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .fontWeight(.bold)
                         }
                     }
                     .padding()
-                    .background(Color.white.opacity(0.1))
+                    .background(Color.white)
                     .cornerRadius(12)
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                     .padding(.horizontal)
 
                     Spacer()
@@ -67,10 +73,8 @@ struct ProfileView: View {
                             .foregroundColor(.red)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.red, lineWidth: 1)
-                            )
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(25)
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 40)
@@ -83,12 +87,12 @@ struct ProfileView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(.green)
                 }
             }
-            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(Color(red: 0.96, green: 0.96, blue: 0.96), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .alert("Log Out", isPresented: $showLogoutConfirmation) {
                 Button("Yes", role: .destructive) {
                     UserDefaults.standard.set(false, forKey: "hasSeenWelcome")

@@ -24,16 +24,16 @@ struct StatsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black
+                Color(red: 0.96, green: 0.96, blue: 0.96)
                     .ignoresSafeArea()
 
                 if MatchStore.shared.matches.isEmpty {
                     VStack {
                         Text("No matches yet")
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                             .font(.title2)
                         Text("Start charting matches to see stats here")
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                             .font(.subheadline)
                     }
                 } else {
@@ -44,7 +44,7 @@ struct StatsView: View {
                                 Image(systemName: "magnifyingglass")
                                     .foregroundColor(.gray)
                                 TextField("Search matches", text: $searchText)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.primary)
                                 if !searchText.isEmpty {
                                     Button {
                                         searchText = ""
@@ -55,7 +55,7 @@ struct StatsView: View {
                                 }
                             }
                             .padding()
-                            .background(Color.white.opacity(0.1))
+                            .background(Color.white)
                             .cornerRadius(8)
 
                             if filteredMatches.isEmpty && !searchText.isEmpty {
@@ -79,12 +79,12 @@ struct StatsView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(.green)
                 }
             }
-            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(Color(red: 0.96, green: 0.96, blue: 0.96), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
         }
     }
 }
@@ -142,7 +142,7 @@ struct MatchStatsCard: View {
                 VStack(alignment: .leading) {
                     Text("\(match.playerAName) vs \(match.playerBName)")
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
 
                     Text(match.date.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption)
@@ -157,14 +157,21 @@ struct MatchStatsCard: View {
                         ForEach(Array(match.sets.enumerated()), id: \.offset) { _, set in
                             Text("\(set.playerAGames)-\(set.playerBGames)")
                                 .font(.subheadline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                         }
                     }
 
                     if let winner = match.winner {
-                        Text(winner == .playerA ? "\(match.playerAName) won" : "\(match.playerBName) won")
+                        Text(winner == .playerA ? "WIN" : "LOSS")
                             .font(.caption)
-                            .foregroundColor(.green)
+                            .fontWeight(.semibold)
+                            .foregroundColor(winner == .playerA ? Color.green : Color.red)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                (winner == .playerA ? Color.green : Color.red).opacity(0.15)
+                            )
+                            .cornerRadius(4)
                     }
                 }
             }
@@ -181,43 +188,31 @@ struct MatchStatsCard: View {
                     }
 
                     RuleMark(y: .value("Zero", 0))
-                        .foregroundStyle(Color.gray.opacity(0.5))
-                        .lineStyle(StrokeStyle(dash: [5, 5]))
+                        .foregroundStyle(Color.gray.opacity(0.2))
                 }
-                .frame(height: 150)
-                .chartYAxis {
-                    AxisMarks(position: .leading) { _ in
-                        AxisGridLine()
-                            .foregroundStyle(Color.gray.opacity(0.3))
-                        AxisValueLabel()
-                            .foregroundStyle(Color.gray)
-                    }
-                }
-                .chartXAxis {
-                    AxisMarks { _ in
-                        AxisGridLine()
-                            .foregroundStyle(Color.gray.opacity(0.3))
-                    }
-                }
+                .frame(height: 90)
+                .chartYAxis(.hidden)
+                .chartXAxis(.hidden)
 
                 HStack {
                     Text(match.playerAName)
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(.secondary)
                     Spacer()
                     Text("Tap for details")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.gray)
                     Spacer()
                     Text(match.playerBName)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(.secondary)
                 }
             }
         }
         .padding()
-        .background(Color.white.opacity(0.1))
+        .background(Color.white)
         .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         .contentShape(Rectangle())
         .onTapGesture {
             showDetail = true

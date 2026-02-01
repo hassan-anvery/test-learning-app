@@ -108,7 +108,7 @@ struct MatchStatsDetailView: View {
 
     var body: some View {
         ZStack {
-            Color.black
+            Color(red: 0.96, green: 0.96, blue: 0.96)
                 .ignoresSafeArea()
 
             ScrollViewReader { scrollProxy in
@@ -119,7 +119,7 @@ struct MatchStatsDetailView: View {
                             Text("\(currentMatch.playerAName) vs \(currentMatch.playerBName)")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
 
                             Text(currentMatch.date.formatted(date: .abbreviated, time: .omitted))
                                 .font(.subheadline)
@@ -130,13 +130,13 @@ struct MatchStatsDetailView: View {
                                 ForEach(Array(currentMatch.sets.enumerated()), id: \.offset) { _, set in
                                     Text("\(set.playerAGames)-\(set.playerBGames)")
                                         .font(.headline)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.primary)
                                 }
 
                                 if let winner = currentMatch.winner {
                                     Spacer()
                                     Text(winner == .playerA ? "\(currentMatch.playerAName) won" : "\(currentMatch.playerBName) won")
-                                        .font(.subheadline)
+                                        .font(.caption)
                                         .foregroundColor(.green)
                                 }
                             }
@@ -148,7 +148,7 @@ struct MatchStatsDetailView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Match Momentum")
                                     .font(.headline)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.primary)
                                     .padding(.horizontal)
 
                                 Chart {
@@ -161,31 +161,18 @@ struct MatchStatsDetailView: View {
                                     }
 
                                     RuleMark(y: .value("Zero", 0))
-                                        .foregroundStyle(Color.gray.opacity(0.5))
-                                        .lineStyle(StrokeStyle(dash: [5, 5]))
+                                        .foregroundStyle(Color.gray.opacity(0.2))
 
                                     // Selected point indicator
                                     if let selected = selectedPointIndex {
                                         RuleMark(x: .value("Selected", selected))
-                                            .foregroundStyle(Color.white.opacity(0.8))
+                                            .foregroundStyle(Color.green.opacity(0.6))
                                             .lineStyle(StrokeStyle(lineWidth: 2))
                                     }
                                 }
                                 .frame(height: 250)
-                                .chartYAxis {
-                                    AxisMarks(position: .leading) { _ in
-                                        AxisGridLine()
-                                            .foregroundStyle(Color.gray.opacity(0.3))
-                                        AxisValueLabel()
-                                            .foregroundStyle(Color.gray)
-                                    }
-                                }
-                                .chartXAxis {
-                                    AxisMarks { _ in
-                                        AxisGridLine()
-                                            .foregroundStyle(Color.gray.opacity(0.3))
-                                    }
-                                }
+                                .chartYAxis(.hidden)
+                                .chartXAxis(.hidden)
                                 .chartOverlay { proxy in
                                     GeometryReader { geometry in
                                         Rectangle()
@@ -207,21 +194,25 @@ struct MatchStatsDetailView: View {
                                             }
                                     }
                                 }
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                                 .padding(.horizontal)
 
                                 // Player labels
                                 HStack {
                                     Text(currentMatch.playerAName)
                                         .font(.caption)
-                                        .foregroundColor(.green)
+                                        .foregroundColor(.secondary)
                                     Spacer()
                                     Text("Tap graph to select point")
-                                        .font(.caption)
+                                        .font(.caption2)
                                         .foregroundColor(.gray)
                                     Spacer()
                                     Text(currentMatch.playerBName)
                                         .font(.caption)
-                                        .foregroundColor(.red)
+                                        .foregroundColor(.secondary)
                                 }
                                 .padding(.horizontal)
                             }
@@ -231,7 +222,7 @@ struct MatchStatsDetailView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Point-by-Point Notes")
                                 .font(.headline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .padding(.horizontal)
 
                             LazyVStack(spacing: 8) {
@@ -274,9 +265,9 @@ struct MatchStatsDetailView: View {
         }
         .navigationTitle("Match Details")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.black, for: .navigationBar)
+        .toolbarBackground(Color(red: 0.96, green: 0.96, blue: 0.96), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbarColorScheme(.light, for: .navigationBar)
         .fullScreenCover(item: $editingContext) { context in
             ZStack {
                 Color.black.ignoresSafeArea()
@@ -330,7 +321,7 @@ struct TimelinePointRow: View {
             Text("Point \(timelinePoint.id + 1)")
                 .font(.subheadline)
                 .fontWeight(isSelected ? .bold : .regular)
-                .foregroundColor(isSelected ? .white : .gray)
+                .foregroundColor(isSelected ? .primary : .secondary)
                 .frame(width: 70, alignment: .leading)
 
             if let point = timelinePoint.point {
@@ -360,8 +351,9 @@ struct TimelinePointRow: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
-        .background(isSelected ? Color.white.opacity(0.15) : Color.white.opacity(0.05))
+        .background(Color.white)
         .cornerRadius(8)
+        .shadow(color: isSelected ? Color.green.opacity(0.3) : Color.black.opacity(0.05), radius: isSelected ? 4 : 2, x: 0, y: 1)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -381,7 +373,7 @@ struct TimelinePointRow: View {
                     if let howWon = note.howWon {
                         Text(howWon.rawValue)
                             .font(.caption2)
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                     }
                     if let attitude = note.attitude {
                         Text(attitude.rawValue)
@@ -405,7 +397,7 @@ struct TimelinePointRow: View {
                 Button(action: onAdd) {
                     Text("Add")
                         .font(.caption2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.green)
                 }
             }
         }
