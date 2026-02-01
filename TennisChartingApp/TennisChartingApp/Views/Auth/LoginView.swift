@@ -19,7 +19,7 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            Color.black
+            Color(red: 0.96, green: 0.96, blue: 0.96)
                 .ignoresSafeArea()
 
             VStack(spacing: 30) {
@@ -29,38 +29,40 @@ struct LoginView: View {
                 Text("Welcome Back")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
 
                 // Form fields
                 VStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Email:")
-                            .foregroundColor(.white)
+                            .foregroundColor(.secondary)
                             .font(.headline)
 
-                        TextField("", text: $email)
+                        TextField("", text: $email, prompt: Text("Enter your email").foregroundColor(.gray.opacity(0.6)))
                             .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
                             .textInputAutocapitalization(.never)
                             .keyboardType(.emailAddress)
                             .textContentType(.emailAddress)
+                            .foregroundColor(.primary)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Password:")
-                            .foregroundColor(.white)
+                            .foregroundColor(.secondary)
                             .font(.headline)
 
-                        SecureField("", text: $password)
+                        SecureField("", text: $password, prompt: Text("Enter your password").foregroundColor(.gray.opacity(0.6)))
                             .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
                             .textContentType(.password)
+                            .foregroundColor(.primary)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                     }
                 }
                 .padding(.horizontal, 40)
@@ -81,11 +83,11 @@ struct LoginView: View {
                 } label: {
                     Text("Login")
                         .font(.headline)
-                        .foregroundColor(isFormValid ? .black : .gray)
+                        .foregroundColor(isFormValid ? .white : .gray)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(isFormValid ? Color.white : Color.white.opacity(0.3))
-                        .cornerRadius(8)
+                        .background(isFormValid ? Color.green : Color.gray.opacity(0.2))
+                        .cornerRadius(25)
                 }
                 .disabled(!isFormValid || isLoading)
                 .padding(.horizontal, 40)
@@ -99,7 +101,10 @@ struct LoginView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.15))
+                        .clipShape(Circle())
                 }
             }
         }
