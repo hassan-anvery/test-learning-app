@@ -13,23 +13,32 @@ class MatchStore {
 
     private(set) var matches: [Match] = []
 
-    private let matchesKey = "tennis_charting_matches"
+    private var activeUserIdentifier: String?
 
     private init() {
-        loadMatches()
+        // Matches will be loaded via setActiveUser from AuthManager
+    }
+
+    private func matchesKey(for identifier: String?) -> String? {
+        guard let identifier = identifier else { return nil }
+        let sanitized = identifier.replacingOccurrences(of: "[^a-zA-Z0-9]", with: "_", options: .regularExpression)
+        return "tennis_charting_matches_\(sanitized)"
     }
 
     private func loadMatches() {
-        guard let data = UserDefaults.standard.data(forKey: matchesKey),
+        guard let key = matchesKey(for: activeUserIdentifier),
+              let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode([Match].self, from: data) else {
+            matches = []
             return
         }
         matches = decoded.sorted { $0.date > $1.date }
     }
 
     private func saveMatches() {
+        guard let key = matchesKey(for: activeUserIdentifier) else { return }
         if let data = try? JSONEncoder().encode(matches) {
-            UserDefaults.standard.set(data, forKey: matchesKey)
+            UserDefaults.standard.set(data, forKey: key)
         }
     }
 
@@ -52,5 +61,14 @@ class MatchStore {
 
     func getMatch(by id: UUID) -> Match? {
         matches.first { $0.id == id }
+    }
+
+    func setActiveUser(_ user: User?) {
+        if let user = user {
+            activeUserIdentifier = user.id.uuidString
+        } else {
+            activeUserIdentifier = nil
+        }
+        loadMatches()
     }
 }

@@ -27,6 +27,7 @@ class AuthManager {
             currentUser = user
             isAuthenticated = true
         }
+        MatchStore.shared.setActiveUser(currentUser)
     }
 
     private func loadAllUsers() -> [User] {
@@ -85,6 +86,7 @@ class AuthManager {
 
         currentUser = newUser
         isAuthenticated = true
+        MatchStore.shared.setActiveUser(newUser)
 
         return .success(newUser)
     }
@@ -104,6 +106,7 @@ class AuthManager {
         saveCurrentUser(user)
         currentUser = user
         isAuthenticated = true
+        MatchStore.shared.setActiveUser(user)
 
         return .success(user)
     }
@@ -112,6 +115,7 @@ class AuthManager {
         saveCurrentUser(nil)
         currentUser = nil
         isAuthenticated = false
+        MatchStore.shared.setActiveUser(nil)
     }
 }
 
