@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct MatchDetailView: View {
     let match: Match
@@ -12,7 +13,7 @@ struct MatchDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black
+                Color(UIColor.systemGray6)
                     .ignoresSafeArea()
 
                 ScrollView {
@@ -22,7 +23,7 @@ struct MatchDetailView: View {
                             Text("\(match.playerAName) vs \(match.playerBName)")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
 
                             Text(match.date.formatted(date: .long, time: .shortened))
                                 .font(.subheadline)
@@ -64,12 +65,12 @@ struct MatchDetailView: View {
                             // Player A
                             HStack(spacing: 0) {
                                 Text(match.playerAName)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .frame(width: 100, alignment: .leading)
 
                                 ForEach(0..<match.sets.count, id: \.self) { index in
                                     Text("\(match.sets[index].playerAGames)")
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.black)
                                         .fontWeight(match.sets[index].winner == .playerA ? .bold : .regular)
                                         .frame(width: 50)
                                 }
@@ -82,12 +83,12 @@ struct MatchDetailView: View {
                             // Player B
                             HStack(spacing: 0) {
                                 Text(match.playerBName)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .frame(width: 100, alignment: .leading)
 
                                 ForEach(0..<match.sets.count, id: \.self) { index in
                                     Text("\(match.sets[index].playerBGames)")
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.black)
                                         .fontWeight(match.sets[index].winner == .playerB ? .bold : .regular)
                                         .frame(width: 50)
                                 }
@@ -95,22 +96,23 @@ struct MatchDetailView: View {
                             .padding(.vertical, 12)
                         }
                         .padding(.horizontal)
-                        .background(Color.white.opacity(0.1))
+                        .background(Color.white)
                         .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
                         .padding(.horizontal)
 
                         // Match info
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Match Info")
                                 .font(.headline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
 
                             HStack {
                                 Text("Format")
                                     .foregroundColor(.gray)
                                 Spacer()
                                 Text(match.matchFormat.displayName)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                             }
 
                             HStack {
@@ -118,12 +120,13 @@ struct MatchDetailView: View {
                                     .foregroundColor(.gray)
                                 Spacer()
                                 Text(match.firstServer == .playerA ? match.playerAName : match.playerBName)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                             }
                         }
                         .padding()
-                        .background(Color.white.opacity(0.1))
+                        .background(Color.white)
                         .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
                         .padding(.horizontal)
 
                         Spacer()
@@ -137,12 +140,13 @@ struct MatchDetailView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
                 }
             }
-            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(Color(UIColor.systemGray6), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
         }
     }
 }
