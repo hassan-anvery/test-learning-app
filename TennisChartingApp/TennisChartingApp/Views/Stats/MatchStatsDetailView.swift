@@ -393,44 +393,70 @@ struct TimelinePointRow: View {
     let onEditNoteB: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Point number
-            Text("Point \(timelinePoint.id + 1)")
-                .font(.subheadline)
-                .fontWeight(isSelected ? .bold : .regular)
-                .foregroundColor(isSelected ? .primary : .secondary)
-                .frame(width: 70, alignment: .leading)
+        HStack(spacing: 0) {
+            // Leading accent bar — visible when selected
+            RoundedRectangle(cornerRadius: 2)
+                .fill(isSelected ? Color.green : Color.clear)
+                .frame(width: 3)
 
-            if let point = timelinePoint.point {
-                // Winner indicator
-                Text(point.winner == .playerA ? match.playerAName : match.playerBName)
-                    .font(.caption)
-                    .foregroundColor(point.winner == .playerA ? .green : .red)
-                    .frame(width: 60, alignment: .leading)
+            VStack(alignment: .leading, spacing: 6) {
+                if let point = timelinePoint.point {
+                    // Header: point number · winner name · edit affordance
+                    HStack(spacing: 4) {
+                        Text("Point \(timelinePoint.id + 1)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                // Notes section - show both
-                VStack(alignment: .leading, spacing: 4) {
-                    // Player A note
-                    noteRow(label: "A:", note: point.note, color: .green, onAdd: onEditNoteA, onEdit: onEditNoteA)
+                        Text("·")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                    // Player B note
-                    noteRow(label: "B:", note: point.playerBNote, color: .red, onAdd: onEditNoteB, onEdit: onEditNoteB)
+                        Text(point.winner == .playerA ? match.playerAName : match.playerBName)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(point.winner == .playerA ? .green : .red)
+
+                        Spacer()
+
+                        Button(action: onEditNoteA) {
+                            Image(systemName: point.note != nil ? "pencil" : "plus")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // A: preview line
+                    notePreviewLine(label: "A", note: point.note, color: .green, onTap: onEditNoteA)
+
+                    // B: preview line
+                    notePreviewLine(label: "B", note: point.playerBNote, color: .red, onTap: onEditNoteB)
+
+                } else {
+                    // Tiebreak — no editable data
+                    HStack(spacing: 4) {
+                        Text("Point \(timelinePoint.id + 1)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text("·")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text("Tiebreak")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .italic()
+
+                        Spacer()
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                // Tiebreak point
-                Text("Tiebreak")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .italic()
-                Spacer()
             }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
         .background(Color.white)
         .cornerRadius(8)
-        .shadow(color: isSelected ? Color.green.opacity(0.3) : Color.black.opacity(0.05), radius: isSelected ? 4 : 2, x: 0, y: 1)
+        .shadow(color: isSelected ? Color.green.opacity(0.2) : Color.black.opacity(0.05), radius: isSelected ? 4 : 2, x: 0, y: 1)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -438,44 +464,34 @@ struct TimelinePointRow: View {
     }
 
     @ViewBuilder
-    private func noteRow(label: String, note: PointNote?, color: Color, onAdd: @escaping () -> Void, onEdit: @escaping () -> Void) -> some View {
+    private func notePreviewLine(label: String, note: PointNote?, color: Color, onTap: @escaping () -> Void) -> some View {
         HStack(spacing: 4) {
-            Text(label)
+            Text("\(label):")
                 .font(.caption2)
+                .fontWeight(.medium)
                 .foregroundColor(color)
-                .frame(width: 16, alignment: .leading)
+                .frame(width: 14, alignment: .leading)
 
             if let note = note {
-                HStack(spacing: 4) {
-                    if let howWon = note.howWon {
-                        Text(howWon.rawValue)
-                            .font(.caption2)
-                            .foregroundColor(.primary)
-                    }
-                    if let attitude = note.attitude {
-                        Text(attitude.rawValue)
-                            .font(.caption2)
-                            .foregroundColor(.orange)
-                    }
-                    if let additionalNotes = note.additionalNotes, !additionalNotes.isEmpty {
-                        Text(additionalNotes)
-                            .font(.caption2)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
-                    }
-                }
+                let parts: [String] = [
+                    note.howWon.map(\.rawValue),
+                    note.attitude.map(\.rawValue),
+                    note.additionalNotes.flatMap { $0.isEmpty ? nil : $0 }
+                ].compactMap { $0 }
 
-                Button(action: onEdit) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
-                }
+                Text(parts.joined(separator: " · "))
+                    .font(.caption2)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                Button(action: onAdd) {
-                    Text("Add")
+                Button(action: onTap) {
+                    Text("Add note")
                         .font(.caption2)
-                        .foregroundColor(.green)
+                        .foregroundColor(.secondary)
                 }
+                Spacer()
             }
         }
     }
