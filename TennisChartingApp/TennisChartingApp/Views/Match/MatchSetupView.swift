@@ -17,6 +17,7 @@ struct MatchSetupView: View {
     @State private var playerBName = ""
     @State private var firstServer: PlayerSide?
     @State private var matchFormat: MatchFormat = .bestOf3
+    @State private var noAdScoring = false
     @State private var navigateToMatch = false
     @State private var createdMatch: Match?
 
@@ -46,6 +47,9 @@ struct MatchSetupView: View {
 
                         // Match format
                         matchFormatSection
+
+                        // Scoring format
+                        noAdScoringSection
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
@@ -179,6 +183,20 @@ struct MatchSetupView: View {
         }
     }
 
+    private var noAdScoringSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Scoring Format")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            Toggle("No-Ad Scoring", isOn: $noAdScoring)
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        }
+    }
+
     private var matchFormatSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Match Format")
@@ -227,7 +245,8 @@ struct MatchSetupView: View {
             playerBName: playerBName,
             matchFormat: matchFormat,
             startingPlayer: firstServer,
-            firstServer: firstServer
+            firstServer: firstServer,
+            noAdScoring: noAdScoring
         )
 
         MatchStore.shared.addMatch(match)

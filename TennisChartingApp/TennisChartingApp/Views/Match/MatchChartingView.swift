@@ -325,7 +325,7 @@ struct MatchChartingView: View {
         // Ensure we have a current set and game
         if match.sets.isEmpty {
             var newSet = MatchSet()
-            let newGame = Game(server: match.firstServer)
+            let newGame = Game(server: match.firstServer, noAdScoring: match.noAdScoring)
             newSet.games.append(newGame)
             match.sets.append(newSet)
         }
@@ -359,7 +359,7 @@ struct MatchChartingView: View {
         // Get or create current game
         if currentSet.games.isEmpty || currentSet.games.last?.winner != nil {
             let server = determineServer(for: currentSet)
-            let newGame = Game(server: server)
+            let newGame = Game(server: server, noAdScoring: match.noAdScoring)
             currentSet.games.append(newGame)
             match.sets[setIndex] = currentSet
         }
@@ -378,7 +378,7 @@ struct MatchChartingView: View {
                 if match.winner == nil {
                     var newSet = MatchSet()
                     let server = determineServer(for: newSet)
-                    let newGame = Game(server: server)
+                    let newGame = Game(server: server, noAdScoring: match.noAdScoring)
                     newSet.games.append(newGame)
                     match.sets.append(newSet)
                 }
@@ -389,7 +389,7 @@ struct MatchChartingView: View {
             } else {
                 // Start new game
                 let server = determineServer(for: match.sets[setIndex])
-                let newGame = Game(server: server)
+                let newGame = Game(server: server, noAdScoring: match.noAdScoring)
                 match.sets[setIndex].games.append(newGame)
             }
         }
@@ -412,7 +412,7 @@ struct MatchChartingView: View {
             if match.winner == nil {
                 var newSet = MatchSet()
                 let server = determineServer(for: newSet)
-                let newGame = Game(server: server)
+                let newGame = Game(server: server, noAdScoring: match.noAdScoring)
                 newSet.games.append(newGame)
                 match.sets.append(newSet)
             }

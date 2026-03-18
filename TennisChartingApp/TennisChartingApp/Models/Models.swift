@@ -31,6 +31,7 @@ struct Match: Codable, Identifiable {
     var matchFormat: MatchFormat
     var startingPlayer: PlayerSide
     var firstServer: PlayerSide
+    var noAdScoring: Bool
 
     init(
         id: UUID = UUID(),
@@ -38,7 +39,8 @@ struct Match: Codable, Identifiable {
         playerBName: String,
         matchFormat: MatchFormat,
         startingPlayer: PlayerSide,
-        firstServer: PlayerSide
+        firstServer: PlayerSide,
+        noAdScoring: Bool = false
     ) {
         self.id = id
         self.playerAName = playerAName
@@ -49,6 +51,25 @@ struct Match: Codable, Identifiable {
         self.matchFormat = matchFormat
         self.startingPlayer = startingPlayer
         self.firstServer = firstServer
+        self.noAdScoring = noAdScoring
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, playerAName, playerBName, sets, date, isCompleted, matchFormat, startingPlayer, firstServer, noAdScoring
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        playerAName = try container.decode(String.self, forKey: .playerAName)
+        playerBName = try container.decode(String.self, forKey: .playerBName)
+        sets = try container.decode([MatchSet].self, forKey: .sets)
+        date = try container.decode(Date.self, forKey: .date)
+        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        matchFormat = try container.decode(MatchFormat.self, forKey: .matchFormat)
+        startingPlayer = try container.decode(PlayerSide.self, forKey: .startingPlayer)
+        firstServer = try container.decode(PlayerSide.self, forKey: .firstServer)
+        noAdScoring = (try? container.decode(Bool.self, forKey: .noAdScoring)) ?? false
     }
 
     var playerASetsWon: Int {
@@ -156,11 +177,25 @@ struct Game: Codable, Identifiable {
     let id: UUID
     var points: [Point]
     var server: PlayerSide
+    var noAdScoring: Bool
 
-    init(id: UUID = UUID(), server: PlayerSide) {
+    init(id: UUID = UUID(), server: PlayerSide, noAdScoring: Bool = false) {
         self.id = id
         self.points = []
         self.server = server
+        self.noAdScoring = noAdScoring
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, points, server, noAdScoring
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        points = try container.decode([Point].self, forKey: .points)
+        server = try container.decode(PlayerSide.self, forKey: .server)
+        noAdScoring = (try? container.decode(Bool.self, forKey: .noAdScoring)) ?? false
     }
 
     var playerAPoints: Int {
@@ -183,7 +218,13 @@ struct Game: Codable, Identifiable {
         let a = playerAPoints
         let b = playerBPoints
 
-        // Need at least 4 points and 2 point lead to win
+        // No-ad: from deuce (3-3), next point wins immediately
+        if noAdScoring {
+            if a == 4 && b == 3 { return .playerA }
+            if b == 4 && a == 3 { return .playerB }
+        }
+
+        // Standard: need at least 4 points and 2 point lead to win
         if a >= 4 && a - b >= 2 { return .playerA }
         if b >= 4 && b - a >= 2 { return .playerB }
 
