@@ -13,6 +13,7 @@ struct MatchChartingView: View {
     @State private var showNoteForPlayerA = false
     @State private var showNoteForPlayerB = false
     @State private var pendingPointWinner: PlayerSide?
+    @State private var undoStack: [Match] = []
 
     // Current game state
     private var currentSet: MatchSet {
@@ -46,6 +47,10 @@ struct MatchChartingView: View {
     private var isDeuce: Bool {
         guard let game = currentGame else { return false }
         return game.playerAPoints >= 3 && game.playerBPoints >= 3 && game.playerAPoints == game.playerBPoints
+    }
+
+    private var canUndo: Bool {
+        !undoStack.isEmpty && !match.isCompleted
     }
 
     private var hasRecordedPoints: Bool {
@@ -147,6 +152,20 @@ struct MatchChartingView: View {
             }
 
             Spacer()
+
+            // Undo button
+            Button {
+                undoLastPoint()
+            } label: {
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(canUndo ? .black : .gray)
+                    .padding(8)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            }
+            .disabled(!canUndo)
 
             // Set indicator
             VStack(spacing: 2) {
@@ -298,6 +317,11 @@ struct MatchChartingView: View {
     // MARK: - Scoring Logic
 
     private func scorePoint(for player: PlayerSide) {
+        undoStack.append(match)
+        if undoStack.count > 20 {
+            undoStack.removeFirst()
+        }
+
         // Ensure we have a current set and game
         if match.sets.isEmpty {
             var newSet = MatchSet()
@@ -411,6 +435,12 @@ struct MatchChartingView: View {
         if match.winner != nil {
             match.isCompleted = true
         }
+    }
+
+    private func undoLastPoint() {
+        guard let previous = undoStack.popLast() else { return }
+        match = previous
+        MatchStore.shared.updateMatch(match)
     }
 
     private func endMatch() {
