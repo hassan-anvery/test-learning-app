@@ -17,6 +17,7 @@ struct MatchSetupView: View {
     @State private var playerBName = ""
     @State private var firstServer: PlayerSide?
     @State private var matchFormat: MatchFormat = .bestOf3
+    @State private var noAd: Bool = false
     @State private var navigateToMatch = false
     @State private var createdMatch: Match?
 
@@ -37,6 +38,9 @@ struct MatchSetupView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         // Heading
                         headingSection
+
+                        // Quick presets
+                        presetSection
 
                         // Player name cards
                         playerNameCards
@@ -179,6 +183,44 @@ struct MatchSetupView: View {
         }
     }
 
+    private var presetSection: some View {
+        let presets: [(label: String, format: MatchFormat, noAd: Bool)] = [
+            ("Best of 3 · Standard", .bestOf3, false),
+            ("Best of 3 · No-Ad",    .bestOf3, true),
+            ("Best of 1 · Standard", .bestOf1, false),
+            ("Best of 1 · No-Ad",    .bestOf1, true)
+        ]
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Quick Presets")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            VStack(spacing: 10) {
+                ForEach(0..<2) { row in
+                    HStack(spacing: 10) {
+                        ForEach(0..<2) { col in
+                            let preset = presets[row * 2 + col]
+                            let isActive = matchFormat == preset.format && noAd == preset.noAd
+                            Button {
+                                matchFormat = preset.format
+                                noAd = preset.noAd
+                            } label: {
+                                Text(preset.label)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(isActive ? .white : .black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(isActive ? Color(red: 0.18, green: 0.55, blue: 0.45) : Color.white)
+                                    .cornerRadius(12)
+                                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var matchFormatSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Match Format")
@@ -201,6 +243,20 @@ struct MatchSetupView: View {
                     }
                 }
             }
+
+            HStack {
+                Text("No-Ad Scoring")
+                    .font(.system(size: 15))
+                    .foregroundColor(.black)
+                Spacer()
+                Toggle("", isOn: $noAd)
+                    .labelsHidden()
+                    .tint(Color(red: 0.18, green: 0.55, blue: 0.45))
+            }
+            .padding(16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
         }
     }
 
@@ -227,7 +283,8 @@ struct MatchSetupView: View {
             playerBName: playerBName,
             matchFormat: matchFormat,
             startingPlayer: firstServer,
-            firstServer: firstServer
+            firstServer: firstServer,
+            noAd: noAd
         )
 
         MatchStore.shared.addMatch(match)

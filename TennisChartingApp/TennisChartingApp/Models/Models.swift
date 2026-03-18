@@ -31,6 +31,7 @@ struct Match: Codable, Identifiable {
     var matchFormat: MatchFormat
     var startingPlayer: PlayerSide
     var firstServer: PlayerSide
+    var noAd: Bool
 
     init(
         id: UUID = UUID(),
@@ -38,7 +39,8 @@ struct Match: Codable, Identifiable {
         playerBName: String,
         matchFormat: MatchFormat,
         startingPlayer: PlayerSide,
-        firstServer: PlayerSide
+        firstServer: PlayerSide,
+        noAd: Bool = false
     ) {
         self.id = id
         self.playerAName = playerAName
@@ -49,6 +51,21 @@ struct Match: Codable, Identifiable {
         self.matchFormat = matchFormat
         self.startingPlayer = startingPlayer
         self.firstServer = firstServer
+        self.noAd = noAd
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id             = try c.decode(UUID.self,        forKey: .id)
+        playerAName    = try c.decode(String.self,      forKey: .playerAName)
+        playerBName    = try c.decode(String.self,      forKey: .playerBName)
+        sets           = try c.decode([MatchSet].self,  forKey: .sets)
+        date           = try c.decode(Date.self,        forKey: .date)
+        isCompleted    = try c.decode(Bool.self,        forKey: .isCompleted)
+        matchFormat    = try c.decode(MatchFormat.self, forKey: .matchFormat)
+        startingPlayer = try c.decode(PlayerSide.self,  forKey: .startingPlayer)
+        firstServer    = try c.decode(PlayerSide.self,  forKey: .firstServer)
+        noAd           = try c.decodeIfPresent(Bool.self, forKey: .noAd) ?? false
     }
 
     var playerASetsWon: Int {
