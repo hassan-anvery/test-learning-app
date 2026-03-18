@@ -10,6 +10,9 @@ struct HomeView: View {
     @State private var showStats = false
     @State private var showProfile = false
     @State private var selectedMatch: Match?
+    @State private var inProgressMatch: Match?
+    @State private var showResumeDialog = false
+    @State private var matchToResume: Match?
     @State private var matchToDelete: Match?
     @State private var showDeleteConfirmation = false
 
@@ -63,7 +66,12 @@ struct HomeView: View {
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
                             .onTapGesture {
-                                selectedMatch = match
+                                if !match.isCompleted {
+                                    inProgressMatch = match
+                                    showResumeDialog = true
+                                } else {
+                                    selectedMatch = match
+                                }
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
@@ -98,6 +106,22 @@ struct HomeView: View {
         .sheet(item: $selectedMatch) { match in
             MatchDetailView(match: match)
         }
+        .fullScreenCover(item: $matchToResume) { match in
+            MatchChartingView(match: match)
+        }
+        .confirmationDialog("", isPresented: $showResumeDialog, titleVisibility: .hidden) {
+            Button("Resume Match") {
+                matchToResume = inProgressMatch
+                inProgressMatch = nil
+            }
+            Button("View Match Details") {
+                selectedMatch = inProgressMatch
+                inProgressMatch = nil
+            }
+            Button("Cancel", role: .cancel) {
+                inProgressMatch = nil
+            }
+        }
         .alert("Delete Match", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 if let match = matchToDelete {
@@ -126,12 +150,14 @@ struct MatchRowView: View {
     private var badgeText: String {
         if match.winner == .playerA { return "WIN" }
         if match.winner == .playerB { return "LOSS" }
+        if match.isCompleted { return "ENDED" }
         return "IN PROGRESS"
     }
 
     private var badgeColor: Color {
         if match.winner == .playerA { return Color(red: 0.18, green: 0.55, blue: 0.45) }
         if match.winner == .playerB { return Color(red: 0.8, green: 0.3, blue: 0.3) }
+        if match.isCompleted { return Color(UIColor.systemGray3) }
         return Color.gray
     }
 
