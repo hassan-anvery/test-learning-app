@@ -392,6 +392,45 @@ struct TimelinePointRow: View {
     let onEditNoteA: () -> Void
     let onEditNoteB: () -> Void
 
+    private var pointMarker: (label: String, color: Color)? {
+        let s = timelinePoint.setIndex
+        let g = timelinePoint.gameIndex
+        let i = timelinePoint.pointInGameIndex
+
+        guard s >= 0, g >= 0,
+              s < match.sets.count,
+              g < match.sets[s].games.count else { return nil }
+
+        let game = match.sets[s].games[g]
+        let before = game.points.prefix(i)
+        let aPoints = before.filter { $0.winner == .playerA }.count
+        let bPoints = before.filter { $0.winner == .playerB }.count
+
+        func isGamePoint(for player: PlayerSide) -> Bool {
+            let x   = player == .playerA ? aPoints : bPoints
+            let opp = player == .playerA ? bPoints  : aPoints
+            return x >= 3 && (opp < 3 || x > opp)
+        }
+
+        let returner: PlayerSide = game.server == .playerA ? .playerB : .playerA
+
+        let gamesBeforeThis = match.sets[s].games.prefix(g)
+        let aGames = gamesBeforeThis.filter { $0.winner == .playerA }.count
+        let bGames = gamesBeforeThis.filter { $0.winner == .playerB }.count
+
+        func isSetPoint(for player: PlayerSide) -> Bool {
+            guard isGamePoint(for: player) else { return false }
+            let xGames  = (player == .playerA ? aGames : bGames) + 1
+            let oppGames = player == .playerA ? bGames : aGames
+            return xGames >= 6 && xGames - oppGames >= 2
+        }
+
+        if isSetPoint(for: .playerA) || isSetPoint(for: .playerB) { return ("SP", .orange) }
+        if isGamePoint(for: returner) { return ("BP", .red) }
+        if isGamePoint(for: .playerA) || isGamePoint(for: .playerB) { return ("GP", .blue) }
+        return nil
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             // Leading accent bar — visible when selected
@@ -423,6 +462,18 @@ struct TimelinePointRow: View {
                                 .font(.system(size: 10))
                                 .foregroundColor(.secondary)
                         }
+                    }
+
+                    // Key point marker
+                    if let marker = pointMarker {
+                        Text(marker.label)
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(marker.color)
+                            .cornerRadius(4)
                     }
 
                     // A: preview line
