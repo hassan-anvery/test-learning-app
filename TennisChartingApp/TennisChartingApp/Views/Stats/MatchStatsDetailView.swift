@@ -218,6 +218,8 @@ struct MatchStatsDetailView: View {
                             }
                         }
 
+                        MatchInsightsCard(match: currentMatch)
+
                         // Notes Timeline
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Point-by-Point Notes")
@@ -304,6 +306,81 @@ struct MatchStatsDetailView: View {
         }
 
         MatchStore.shared.updateMatch(updatedMatch)
+    }
+}
+
+private struct MatchInsightsCard: View {
+    let match: Match
+
+    private var allPlayerANotes: [PointNote] {
+        match.sets.flatMap(\.games).flatMap(\.points).compactMap(\.note)
+    }
+
+    private var topWinningShot: (howWon: HowPointWon, count: Int)? {
+        let shots = match.sets.flatMap(\.games).flatMap(\.points).compactMap { point -> HowPointWon? in
+            guard point.winner == .playerA, let howWon = point.note?.howWon else { return nil }
+            return howWon
+        }
+        guard shots.count >= 2 else { return nil }
+        let freq = shots.reduce(into: [:]) { $0[$1, default: 0] += 1 }
+        return freq.max(by: { $0.value < $1.value }).map { ($0.key, $0.value) }
+    }
+
+    private var dominantAttitude: (attitude: Attitude, count: Int)? {
+        let attitudes = allPlayerANotes.compactMap(\.attitude)
+        guard attitudes.count >= 2 else { return nil }
+        let freq = attitudes.reduce(into: [:]) { $0[$1, default: 0] += 1 }
+        return freq.max(by: { $0.value < $1.value }).map { ($0.key, $0.value) }
+    }
+
+    private var recurringNegative: (attitude: Attitude, count: Int)? {
+        let negatives = allPlayerANotes.compactMap(\.attitude).filter { [.rushed, .angry, .dejected].contains($0) }
+        guard negatives.count >= 2 else { return nil }
+        let freq = negatives.reduce(into: [:]) { $0[$1, default: 0] += 1 }
+        return freq.max(by: { $0.value < $1.value }).map { ($0.key, $0.value) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Match Insights")
+                .font(.headline)
+                .foregroundColor(.primary)
+
+            VStack(spacing: 8) {
+                insightRow(
+                    label: "Top winning shot",
+                    value: topWinningShot.map { "\($0.howWon.rawValue) (\($0.count)×)" } ?? "Not enough tagged points",
+                    valueColor: topWinningShot != nil ? .primary : .secondary
+                )
+                insightRow(
+                    label: "Dominant attitude",
+                    value: dominantAttitude.map { "\($0.attitude.rawValue) (\($0.count)×)" } ?? "Not enough attitude tags",
+                    valueColor: dominantAttitude != nil ? .primary : .secondary
+                )
+                insightRow(
+                    label: "Watch out for",
+                    value: recurringNegative.map { "\($0.attitude.rawValue) (\($0.count)×)" } ?? "No recurring negative patterns",
+                    valueColor: recurringNegative != nil ? .orange : .secondary
+                )
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+        .padding(.horizontal)
+    }
+
+    private func insightRow(label: String, value: String, valueColor: Color) -> some View {
+        HStack {
+            Text(label)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(value)
+                .font(.subheadline)
+                .foregroundColor(valueColor)
+        }
     }
 }
 
