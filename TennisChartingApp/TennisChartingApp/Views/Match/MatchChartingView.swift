@@ -209,14 +209,15 @@ struct MatchChartingView: View {
     }
 
     private var setIndicatorBar: some View {
-        HStack(spacing: 6) {
-            Text("SET \(match.sets.count)")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.gray)
-            Text("\(currentSet.playerAGames)-\(currentSet.playerBGames)")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.black)
-        }
+        (Text("Set \(match.sets.count)")
+            .font(.system(size: 13, weight: .medium))
+            .foregroundColor(.secondary)
+        + Text(" · ")
+            .font(.system(size: 13, weight: .regular))
+            .foregroundColor(.secondary)
+        + Text("\(currentSet.playerAGames)–\(currentSet.playerBGames)")
+            .font(.system(size: 15, weight: .bold))
+            .foregroundColor(.primary))
         .frame(maxWidth: .infinity)
         .padding(.top, 4)
     }
