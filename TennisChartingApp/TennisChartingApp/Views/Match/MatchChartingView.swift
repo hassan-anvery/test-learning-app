@@ -14,6 +14,7 @@ struct MatchChartingView: View {
     @State private var showNoteForPlayerB = false
     @State private var pendingPointWinner: PlayerSide?
     @State private var undoStack: [Match] = []
+    @State private var redoStack: [Match] = []
 
     // Current game state
     private var currentSet: MatchSet {
@@ -51,6 +52,10 @@ struct MatchChartingView: View {
 
     private var canUndo: Bool {
         !undoStack.isEmpty && !match.isCompleted
+    }
+
+    private var canRedo: Bool {
+        !redoStack.isEmpty && !match.isCompleted
     }
 
     private var hasRecordedPoints: Bool {
@@ -153,19 +158,34 @@ struct MatchChartingView: View {
 
             Spacer()
 
-            // Undo button
-            Button {
-                undoLastPoint()
-            } label: {
-                Image(systemName: "arrow.uturn.backward")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(canUndo ? .black : .gray)
-                    .padding(8)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            // Undo / Redo pair
+            HStack(spacing: 8) {
+                Button {
+                    undoLastPoint()
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundColor(canUndo ? .black : .gray)
+                        .padding(8)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                }
+                .disabled(!canUndo)
+
+                Button {
+                    redoLastPoint()
+                } label: {
+                    Image(systemName: "arrow.uturn.forward")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundColor(canRedo ? .black : .gray)
+                        .padding(8)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                }
+                .disabled(!canRedo)
             }
-            .disabled(!canUndo)
 
             // Set indicator
             VStack(spacing: 2) {
@@ -321,6 +341,7 @@ struct MatchChartingView: View {
         if undoStack.count > 20 {
             undoStack.removeFirst()
         }
+        redoStack.removeAll()
 
         // Ensure we have a current set and game
         if match.sets.isEmpty {
@@ -439,7 +460,16 @@ struct MatchChartingView: View {
 
     private func undoLastPoint() {
         guard let previous = undoStack.popLast() else { return }
+        redoStack.append(match)
         match = previous
+        MatchStore.shared.updateMatch(match)
+    }
+
+    private func redoLastPoint() {
+        guard let next = redoStack.popLast() else { return }
+        undoStack.append(match)
+        if undoStack.count > 20 { undoStack.removeFirst() }
+        match = next
         MatchStore.shared.updateMatch(match)
     }
 
