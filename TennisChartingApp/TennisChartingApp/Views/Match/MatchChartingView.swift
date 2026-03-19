@@ -80,7 +80,6 @@ struct MatchChartingView: View {
 
             VStack(spacing: 0) {
                 topBar
-                setIndicatorBar
 
                 Spacer()
 
@@ -206,20 +205,6 @@ struct MatchChartingView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
-    }
-
-    private var setIndicatorBar: some View {
-        (Text("Set \(match.sets.count)")
-            .font(.system(size: 13, weight: .medium))
-            .foregroundColor(.secondary)
-        + Text(" · ")
-            .font(.system(size: 13, weight: .regular))
-            .foregroundColor(.secondary)
-        + Text("\(currentSet.playerAGames)–\(currentSet.playerBGames)")
-            .font(.system(size: 15, weight: .bold))
-            .foregroundColor(.primary))
-        .frame(maxWidth: .infinity)
-        .padding(.top, 4)
     }
 
     private var playerABlock: some View {
