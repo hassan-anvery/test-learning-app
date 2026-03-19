@@ -80,6 +80,7 @@ struct MatchChartingView: View {
 
             VStack(spacing: 0) {
                 topBar
+                setIndicatorBar
 
                 Spacer()
 
@@ -187,16 +188,6 @@ struct MatchChartingView: View {
                 .disabled(!canRedo)
             }
 
-            // Set indicator
-            VStack(spacing: 2) {
-                Text("SET \(match.sets.count)")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.gray)
-                Text("\(currentSet.playerAGames)-\(currentSet.playerBGames)")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.black)
-            }
-
             Spacer()
 
             // Match Score button
@@ -215,6 +206,19 @@ struct MatchChartingView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
+    }
+
+    private var setIndicatorBar: some View {
+        HStack(spacing: 6) {
+            Text("SET \(match.sets.count)")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.gray)
+            Text("\(currentSet.playerAGames)-\(currentSet.playerBGames)")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(.black)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
     }
 
     private var playerABlock: some View {
