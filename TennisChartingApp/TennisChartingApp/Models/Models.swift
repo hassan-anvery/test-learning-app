@@ -159,6 +159,24 @@ struct MatchSet: Codable, Identifiable {
 struct TiebreakScore: Codable {
     var playerAPoints: Int
     var playerBPoints: Int
+    var points: [Point]
+
+    init(playerAPoints: Int, playerBPoints: Int) {
+        self.playerAPoints = playerAPoints
+        self.playerBPoints = playerBPoints
+        self.points = []
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case playerAPoints, playerBPoints, points
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        playerAPoints = try c.decode(Int.self,          forKey: .playerAPoints)
+        playerBPoints = try c.decode(Int.self,          forKey: .playerBPoints)
+        points        = try c.decodeIfPresent([Point].self, forKey: .points) ?? []
+    }
 
     var winner: PlayerSide? {
         if playerAPoints >= 7 && playerAPoints - playerBPoints >= 2 { return .playerA }
