@@ -17,9 +17,9 @@ struct MatchDetailView: View {
                     .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 16) {
                         // Match header
-                        VStack(spacing: 8) {
+                        VStack(spacing: 6) {
                             Text("\(match.playerAName) vs \(match.playerBName)")
                                 .font(.title2)
                                 .fontWeight(.bold)
@@ -30,30 +30,44 @@ struct MatchDetailView: View {
                                 .foregroundColor(.gray)
 
                             if let winner = match.winner {
-                                Text(winner == .playerA ? "\(match.playerAName) Won" : "\(match.playerBName) Won")
-                                    .font(.headline)
-                                    .foregroundColor(.green)
-                                    .padding(.top, 4)
+                                Text(winner == PlayerSide.playerA ? "\(match.playerAName) Won" : "\(match.playerBName) Won")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 5)
+                                    .background(Color(red: 0.18, green: 0.55, blue: 0.45).opacity(0.12))
+                                    .cornerRadius(8)
+                                    .padding(.top, 2)
                             } else if !match.isCompleted {
                                 Text("Match In Progress")
-                                    .font(.headline)
+                                    .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.orange)
-                                    .padding(.top, 4)
+                                    .padding(.top, 2)
                             }
                         }
-                        .padding(.top)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 20)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                        .padding(.top, 8)
+                        .padding(.horizontal, 20)
 
                         // Score summary
                         VStack(spacing: 0) {
                             // Header
                             HStack(spacing: 0) {
-                                Text("")
+                                Text("Player")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
                                     .frame(width: 100, alignment: .leading)
 
                                 ForEach(0..<match.sets.count, id: \.self) { index in
-                                    Text("Set \(index + 1)")
+                                    Text(match.sets[index].isTiebreak ? "Set \(index + 1)\n(TB)" : "Set \(index + 1)")
                                         .font(.caption)
                                         .foregroundColor(.gray)
+                                        .multilineTextAlignment(.center)
                                         .frame(width: 50)
                                 }
                             }
@@ -95,11 +109,11 @@ struct MatchDetailView: View {
                             }
                             .padding(.vertical, 12)
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal, 20)
                         .background(Color.white)
                         .cornerRadius(12)
                         .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-                        .padding(.horizontal)
+                        .padding(.horizontal, 20)
 
                         // Match info
                         VStack(alignment: .leading, spacing: 12) {
@@ -119,7 +133,15 @@ struct MatchDetailView: View {
                                 Text("First Server")
                                     .foregroundColor(.gray)
                                 Spacer()
-                                Text(match.firstServer == .playerA ? match.playerAName : match.playerBName)
+                                Text(match.firstServer == PlayerSide.playerA ? match.playerAName : match.playerBName)
+                                    .foregroundColor(.black)
+                            }
+
+                            HStack {
+                                Text("Scoring")
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text(match.noAd ? "No-Ad" : "Standard")
                                     .foregroundColor(.black)
                             }
                         }
