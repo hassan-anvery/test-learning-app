@@ -26,22 +26,18 @@ struct MatchChartingView: View {
     }
 
     private var playerAGameScore: String {
-        guard let game = currentGame, game.winner == nil else { return "0" }
-
         if currentSet.isTiebreak, let tiebreak = currentSet.tiebreakScore {
             return "\(tiebreak.playerAPoints)"
         }
-
+        guard let game = currentGame, game.winner == nil else { return "0" }
         return game.playerAGameScore.rawValue
     }
 
     private var playerBGameScore: String {
-        guard let game = currentGame, game.winner == nil else { return "0" }
-
         if currentSet.isTiebreak, let tiebreak = currentSet.tiebreakScore {
             return "\(tiebreak.playerBPoints)"
         }
-
+        guard let game = currentGame, game.winner == nil else { return "0" }
         return game.playerBGameScore.rawValue
     }
 
@@ -234,7 +230,7 @@ struct MatchChartingView: View {
 
     private var scoreCard: some View {
         VStack(spacing: 8) {
-            Text("GAME SCORE")
+            Text(currentSet.isTiebreak ? "TIEBREAK" : "GAME SCORE")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.gray)
 
