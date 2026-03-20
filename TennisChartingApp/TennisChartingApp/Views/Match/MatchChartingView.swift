@@ -378,9 +378,9 @@ struct MatchChartingView: View {
         match.sets[setIndex].games[gameIndex].points.append(point)
 
         // Check if game is won
-        if let winner = match.sets[setIndex].games[gameIndex].winner {
+        if match.sets[setIndex].games[gameIndex].winner != nil {
             // Check if set is won
-            if let setWinner = match.sets[setIndex].winner {
+            if match.sets[setIndex].winner != nil {
                 // Start new set if match isn't over
                 if match.winner == nil {
                     var newSet = MatchSet()
@@ -415,7 +415,7 @@ struct MatchChartingView: View {
         match.sets[setIndex].tiebreakScore = tiebreakScore
 
         // Check if tiebreak is won
-        if let winner = tiebreakScore.winner {
+        if tiebreakScore.winner != nil {
             // Start new set if match isn't over
             if match.winner == nil {
                 var newSet = MatchSet()
