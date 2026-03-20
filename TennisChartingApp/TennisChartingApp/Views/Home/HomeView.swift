@@ -16,6 +16,26 @@ struct HomeView: View {
     @State private var matchToDelete: Match?
     @State private var showDeleteConfirmation = false
 
+    private var groupedMatches: [(month: String, matches: [Match])] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        var groups: [(month: String, matches: [Match])] = []
+        var currentKey: String?
+        var currentGroup: [Match] = []
+        for match in MatchStore.shared.matches {
+            let key = formatter.string(from: match.date)
+            if key == currentKey {
+                currentGroup.append(match)
+            } else {
+                if let prev = currentKey { groups.append((prev, currentGroup)) }
+                currentKey = key
+                currentGroup = [match]
+            }
+        }
+        if let last = currentKey { groups.append((last, currentGroup)) }
+        return groups
+    }
+
     var body: some View {
         ZStack {
             Color(UIColor.systemGray6)
@@ -50,9 +70,6 @@ struct HomeView: View {
                     Text("Match History")
                         .font(.system(size: 34, weight: .bold))
                         .foregroundColor(.black)
-                    Text("Matches this month")
-                        .font(.system(size: 15))
-                        .foregroundColor(.gray)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
@@ -60,27 +77,36 @@ struct HomeView: View {
 
                 // Match list
                 List {
-                    ForEach(MatchStore.shared.matches) { match in
-                        MatchRowView(match: match)
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
-                            .onTapGesture {
-                                if !match.isCompleted {
-                                    inProgressMatch = match
-                                    showResumeDialog = true
-                                } else {
-                                    selectedMatch = match
-                                }
+                    ForEach(groupedMatches, id: \.month) { group in
+                        Section(header:
+                            Text(group.month)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.gray)
+                                .textCase(nil)
+                        ) {
+                            ForEach(group.matches) { match in
+                                MatchRowView(match: match)
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
+                                    .onTapGesture {
+                                        if !match.isCompleted {
+                                            inProgressMatch = match
+                                            showResumeDialog = true
+                                        } else {
+                                            selectedMatch = match
+                                        }
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            matchToDelete = match
+                                            showDeleteConfirmation = true
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
                             }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    matchToDelete = match
-                                    showDeleteConfirmation = true
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
+                        }
                     }
                 }
                 .listStyle(.plain)
@@ -148,16 +174,16 @@ struct MatchRowView: View {
     }
 
     private var badgeText: String {
-        if match.winner == .playerA { return "WIN" }
-        if match.winner == .playerB { return "LOSS" }
+        if match.winner == PlayerSide.playerA { return "WIN" }
+        if match.winner == PlayerSide.playerB { return "LOSS" }
         if match.isCompleted { return "ENDED" }
         return "IN PROGRESS"
     }
 
     private var badgeColor: Color {
-        if match.winner == .playerA { return Color(red: 0.18, green: 0.55, blue: 0.45) }
-        if match.winner == .playerB { return Color(red: 0.8, green: 0.3, blue: 0.3) }
-        if match.isCompleted { return Color(UIColor.systemGray3) }
+        if match.winner == PlayerSide.playerA { return Color(red: 0.18, green: 0.55, blue: 0.45) }
+        if match.winner == PlayerSide.playerB { return Color(red: 0.8, green: 0.3, blue: 0.3) }
+        if match.isCompleted { return Color(uiColor: .systemGray3) }
         return Color.gray
     }
 
