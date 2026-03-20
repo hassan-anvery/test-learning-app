@@ -46,7 +46,7 @@ struct MatchScoreSheetView: View {
                                 .frame(width: 50)
                         }
 
-                        Text("Game")
+                        Text(match.sets.last?.isTiebreak == true ? "Tiebreak" : "Score")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.gray)
                             .frame(width: 50)
@@ -125,16 +125,12 @@ struct MatchScoreSheetView: View {
     }
 
     private func currentGameScore(for player: PlayerSide) -> String {
-        guard let currentSet = match.sets.last,
-              let currentGame = currentSet.games.last,
-              currentGame.winner == nil else {
-            return "0"
-        }
-
+        guard let currentSet = match.sets.last else { return "0" }
         if currentSet.isTiebreak, let tiebreak = currentSet.tiebreakScore {
             return player == .playerA ? "\(tiebreak.playerAPoints)" : "\(tiebreak.playerBPoints)"
         }
-
+        guard let currentGame = currentSet.games.last,
+              currentGame.winner == nil else { return "0" }
         return player == .playerA ? currentGame.playerAGameScore.rawValue : currentGame.playerBGameScore.rawValue
     }
 }
