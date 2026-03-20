@@ -410,6 +410,7 @@ struct MatchChartingView: View {
         } else {
             tiebreakScore.playerBPoints += 1
         }
+        tiebreakScore.points.append(Point(winner: player))
 
         match.sets[setIndex].tiebreakScore = tiebreakScore
 
@@ -466,12 +467,24 @@ struct MatchChartingView: View {
     }
 
     private func addNoteToLastPoint(for player: PlayerSide, note: PointNote) {
-        // Find the most recent point overall and add note with player subject
+        var noteWithSubject = note
+        noteWithSubject.playerSubject = player
+
         for setIndex in match.sets.indices.reversed() {
+            // Check tiebreak points first (most recent if set is in tiebreak)
+            if match.sets[setIndex].isTiebreak,
+               var tb = match.sets[setIndex].tiebreakScore,
+               !tb.points.isEmpty,
+               let ptIdx = tb.points.indices.last {
+                if player == .playerA { tb.points[ptIdx].note = noteWithSubject }
+                else                  { tb.points[ptIdx].playerBNote = noteWithSubject }
+                match.sets[setIndex].tiebreakScore = tb
+                MatchStore.shared.updateMatch(match)
+                return
+            }
+            // Fall through to regular game points
             for gameIndex in match.sets[setIndex].games.indices.reversed() {
                 if let pointIndex = match.sets[setIndex].games[gameIndex].points.indices.last {
-                    var noteWithSubject = note
-                    noteWithSubject.playerSubject = player
                     if player == .playerA {
                         match.sets[setIndex].games[gameIndex].points[pointIndex].note = noteWithSubject
                     } else {

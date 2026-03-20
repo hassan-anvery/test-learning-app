@@ -51,17 +51,22 @@ struct MatchStatsDetailView: View {
                 }
             }
 
-            // Add tiebreak points (no individual Point data available)
+            // Add tiebreak points
             if let tiebreak = set.tiebreakScore {
-                let totalTiebreakPoints = tiebreak.playerAPoints + tiebreak.playerBPoints
-                for i in 0..<totalTiebreakPoints {
-                    if i < tiebreak.playerAPoints {
-                        momentum += 1
-                    } else {
-                        momentum -= 1
+                if !tiebreak.points.isEmpty {
+                    for point in tiebreak.points {
+                        momentum += point.winner == .playerA ? 1 : -1
+                        data.append(MomentumPoint(index: pointIndex, momentum: momentum, point: point))
+                        pointIndex += 1
                     }
-                    data.append(MomentumPoint(index: pointIndex, momentum: momentum, point: nil))
-                    pointIndex += 1
+                } else {
+                    // Fallback for old matches: synthetic order
+                    let total = tiebreak.playerAPoints + tiebreak.playerBPoints
+                    for i in 0..<total {
+                        momentum += i < tiebreak.playerAPoints ? 1 : -1
+                        data.append(MomentumPoint(index: pointIndex, momentum: momentum, point: nil))
+                        pointIndex += 1
+                    }
                 }
             }
         }
@@ -87,18 +92,32 @@ struct MatchStatsDetailView: View {
                 }
             }
 
-            // Add tiebreak points (no editable Point data)
+            // Add tiebreak points
             if let tiebreak = set.tiebreakScore {
-                let totalTiebreakPoints = tiebreak.playerAPoints + tiebreak.playerBPoints
-                for _ in 0..<totalTiebreakPoints {
-                    points.append(TimelinePoint(
-                        id: pointIndex,
-                        point: nil,
-                        setIndex: setIdx,
-                        gameIndex: -1,
-                        pointInGameIndex: -1
-                    ))
-                    pointIndex += 1
+                if !tiebreak.points.isEmpty {
+                    for (ptIdx, point) in tiebreak.points.enumerated() {
+                        points.append(TimelinePoint(
+                            id: pointIndex,
+                            point: point,
+                            setIndex: setIdx,
+                            gameIndex: -1,
+                            pointInGameIndex: ptIdx
+                        ))
+                        pointIndex += 1
+                    }
+                } else {
+                    // Fallback for old matches: synthetic rows
+                    let total = tiebreak.playerAPoints + tiebreak.playerBPoints
+                    for _ in 0..<total {
+                        points.append(TimelinePoint(
+                            id: pointIndex,
+                            point: nil,
+                            setIndex: setIdx,
+                            gameIndex: -1,
+                            pointInGameIndex: -1
+                        ))
+                        pointIndex += 1
+                    }
                 }
             }
         }
@@ -289,20 +308,35 @@ struct MatchStatsDetailView: View {
     private func saveNote(_ note: PointNote, for timelinePoint: TimelinePoint, player: PlayerSide) {
         var updatedMatch = currentMatch
         guard timelinePoint.setIndex >= 0,
-              timelinePoint.gameIndex >= 0,
-              timelinePoint.pointInGameIndex >= 0 else { return }
+              timelinePoint.setIndex < updatedMatch.sets.count else { return }
 
         var noteWithSubject = note
         noteWithSubject.playerSubject = player
 
-        if player == .playerA {
-            updatedMatch.sets[timelinePoint.setIndex]
-                .games[timelinePoint.gameIndex]
-                .points[timelinePoint.pointInGameIndex].note = noteWithSubject
+        if timelinePoint.gameIndex == -1 {
+            // Tiebreak point
+            guard timelinePoint.pointInGameIndex >= 0,
+                  updatedMatch.sets[timelinePoint.setIndex].tiebreakScore != nil else { return }
+            if player == .playerA {
+                updatedMatch.sets[timelinePoint.setIndex].tiebreakScore!
+                    .points[timelinePoint.pointInGameIndex].note = noteWithSubject
+            } else {
+                updatedMatch.sets[timelinePoint.setIndex].tiebreakScore!
+                    .points[timelinePoint.pointInGameIndex].playerBNote = noteWithSubject
+            }
         } else {
-            updatedMatch.sets[timelinePoint.setIndex]
-                .games[timelinePoint.gameIndex]
-                .points[timelinePoint.pointInGameIndex].playerBNote = noteWithSubject
+            // Regular game point
+            guard timelinePoint.gameIndex >= 0,
+                  timelinePoint.pointInGameIndex >= 0 else { return }
+            if player == .playerA {
+                updatedMatch.sets[timelinePoint.setIndex]
+                    .games[timelinePoint.gameIndex]
+                    .points[timelinePoint.pointInGameIndex].note = noteWithSubject
+            } else {
+                updatedMatch.sets[timelinePoint.setIndex]
+                    .games[timelinePoint.gameIndex]
+                    .points[timelinePoint.pointInGameIndex].playerBNote = noteWithSubject
+            }
         }
 
         MatchStore.shared.updateMatch(updatedMatch)
@@ -392,6 +426,10 @@ struct TimelinePointRow: View {
     let onEditNoteA: () -> Void
     let onEditNoteB: () -> Void
 
+    private var isTiebreakPoint: Bool {
+        timelinePoint.gameIndex == -1
+    }
+
     private var pointMarker: (label: String, color: Color)? {
         let s = timelinePoint.setIndex
         let g = timelinePoint.gameIndex
@@ -464,7 +502,7 @@ struct TimelinePointRow: View {
                         }
                     }
 
-                    // Key point marker
+                    // Key point marker (BP/GP/SP) or tiebreak indicator (TB)
                     if let marker = pointMarker {
                         Text(marker.label)
                             .font(.caption2)
@@ -473,6 +511,15 @@ struct TimelinePointRow: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(marker.color)
+                            .cornerRadius(4)
+                    } else if isTiebreakPoint {
+                        Text("TB")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(red: 0.38, green: 0.38, blue: 0.60))
                             .cornerRadius(4)
                     }
 
