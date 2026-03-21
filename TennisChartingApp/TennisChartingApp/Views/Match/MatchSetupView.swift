@@ -18,6 +18,7 @@ struct MatchSetupView: View {
     @State private var firstServer: PlayerSide?
     @State private var matchFormat: MatchFormat = .bestOf3
     @State private var noAd: Bool = false
+    @State private var sessionType: SessionType = .practice
     @State private var navigateToMatch = false
     @State private var createdMatch: Match?
 
@@ -50,6 +51,10 @@ struct MatchSetupView: View {
 
                         // Match format
                         matchFormatSection
+
+                        // Session type
+                        sessionTypeSection
+                            .padding(.top, 8)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
@@ -58,6 +63,7 @@ struct MatchSetupView: View {
                 // Bottom CTA
                 startMatchButton
                     .padding(.horizontal, 20)
+                    .padding(.top, 16)
                     .padding(.bottom, 16)
             }
         }
@@ -260,6 +266,42 @@ struct MatchSetupView: View {
         }
     }
 
+    private var sessionTypeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Session Type")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach([SessionType.practice, .matchPlay, .tournament], id: \.self) { type in
+                        chipButton(type)
+                    }
+                }
+                HStack(spacing: 8) {
+                    ForEach([SessionType.lesson, .friendly], id: \.self) { type in
+                        chipButton(type)
+                    }
+                }
+            }
+        }
+    }
+
+    private func chipButton(_ type: SessionType) -> some View {
+        Button {
+            sessionType = type
+        } label: {
+            Text(type.rawValue)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(sessionType == type ? .white : .black)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(sessionType == type ? Color(red: 0.18, green: 0.55, blue: 0.45) : Color.white)
+                .cornerRadius(20)
+                .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+        }
+    }
+
     private var startMatchButton: some View {
         Button {
             startMatch()
@@ -284,7 +326,8 @@ struct MatchSetupView: View {
             matchFormat: matchFormat,
             startingPlayer: firstServer,
             firstServer: firstServer,
-            noAd: noAd
+            noAd: noAd,
+            sessionType: sessionType
         )
 
         MatchStore.shared.addMatch(match)

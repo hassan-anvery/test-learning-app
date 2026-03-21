@@ -144,6 +144,14 @@ struct MatchDetailView: View {
                                 Text(match.noAd ? "No-Ad" : "Standard")
                                     .foregroundColor(.black)
                             }
+
+                            HStack {
+                                Text("Session")
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text(match.sessionType.rawValue)
+                                    .foregroundColor(.black)
+                            }
                         }
                         .padding()
                         .background(Color.white)

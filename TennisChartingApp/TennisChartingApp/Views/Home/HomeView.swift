@@ -209,6 +209,10 @@ struct MatchRowView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.black)
 
+            Text(match.sessionType.rawValue)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Color(uiColor: .systemGray2))
+
             // Scores - two row layout
             if !match.sets.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {

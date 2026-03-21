@@ -19,6 +19,14 @@ struct User: Codable, Identifiable {
     }
 }
 
+enum SessionType: String, Codable, CaseIterable {
+    case practice    = "Practice"
+    case matchPlay   = "Match Play"
+    case tournament  = "Tournament"
+    case lesson      = "Lesson"
+    case friendly    = "Friendly"
+}
+
 // MARK: - Match
 
 struct Match: Codable, Identifiable {
@@ -32,6 +40,7 @@ struct Match: Codable, Identifiable {
     var startingPlayer: PlayerSide
     var firstServer: PlayerSide
     var noAd: Bool
+    var sessionType: SessionType
 
     init(
         id: UUID = UUID(),
@@ -40,7 +49,8 @@ struct Match: Codable, Identifiable {
         matchFormat: MatchFormat,
         startingPlayer: PlayerSide,
         firstServer: PlayerSide,
-        noAd: Bool = false
+        noAd: Bool = false,
+        sessionType: SessionType = .practice
     ) {
         self.id = id
         self.playerAName = playerAName
@@ -52,6 +62,7 @@ struct Match: Codable, Identifiable {
         self.startingPlayer = startingPlayer
         self.firstServer = firstServer
         self.noAd = noAd
+        self.sessionType = sessionType
     }
 
     init(from decoder: Decoder) throws {
@@ -65,7 +76,8 @@ struct Match: Codable, Identifiable {
         matchFormat    = try c.decode(MatchFormat.self, forKey: .matchFormat)
         startingPlayer = try c.decode(PlayerSide.self,  forKey: .startingPlayer)
         firstServer    = try c.decode(PlayerSide.self,  forKey: .firstServer)
-        noAd           = try c.decodeIfPresent(Bool.self, forKey: .noAd) ?? false
+        noAd           = try c.decodeIfPresent(Bool.self,        forKey: .noAd)         ?? false
+        sessionType    = try c.decodeIfPresent(SessionType.self, forKey: .sessionType)  ?? .practice
     }
 
     var playerASetsWon: Int {
