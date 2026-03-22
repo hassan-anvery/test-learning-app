@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var matchToResume: Match?
     @State private var matchToDelete: Match?
     @State private var showDeleteConfirmation = false
+    @State private var showReflections = false
 
     private var groupedMatches: [(month: String, matches: [Match])] {
         let formatter = DateFormatter()
@@ -116,12 +117,17 @@ struct HomeView: View {
 
                 // Bottom tab bar
                 BottomTabBar(
-                    onPlusPressed: { showMatchSetup = true }
+                    onFiltersPressed: { /* TODO: show filters */ },
+                    onNewMatchPressed: { showMatchSetup = true },
+                    onReflectPressed: { showReflections = true }
                 )
             }
         }
         .fullScreenCover(isPresented: $showMatchSetup) {
             MatchSetupView()
+        }
+        .sheet(isPresented: $showReflections) {
+            ReflectionsView()
         }
         .sheet(isPresented: $showStats) {
             StatsView()
@@ -245,18 +251,115 @@ struct MatchRowView: View {
 }
 
 struct BottomTabBar: View {
-    let onPlusPressed: () -> Void
+    let onFiltersPressed: () -> Void
+    let onNewMatchPressed: () -> Void
+    let onReflectPressed: () -> Void
 
     var body: some View {
-        Button(action: onPlusPressed) {
-            Image(systemName: "plus")
-                .font(.title)
-                .foregroundColor(.white)
-                .frame(width: 50, height: 50)
-                .background(Color(red: 0.18, green: 0.55, blue: 0.45))
-                .clipShape(Circle())
+        HStack(spacing: 0) {
+            Button(action: onFiltersPressed) {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.black)
+                    .frame(width: 44, height: 44)
+            }
+            .frame(maxWidth: .infinity)
+
+            Button(action: onNewMatchPressed) {
+                Image(systemName: "plus")
+                    .font(.title)
+                    .foregroundColor(.white)
+                    .frame(width: 56, height: 56)
+                    .background(Color(red: 0.18, green: 0.55, blue: 0.45))
+                    .clipShape(Circle())
+            }
+
+            Button(action: onReflectPressed) {
+                Image(systemName: "lightbulb")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.black)
+                    .frame(width: 44, height: 44)
+            }
+            .frame(maxWidth: .infinity)
         }
+        .padding(.horizontal, 20)
         .padding(.vertical, 16)
+    }
+}
+
+struct ReflectionsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedMatch: Match?
+
+    private var matchesWithReflections: [Match] {
+        MatchStore.shared.matches.filter { $0.reflection != nil }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(UIColor.systemGray6).ignoresSafeArea()
+
+                if matchesWithReflections.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "lightbulb")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color(UIColor.systemGray3))
+                        Text("No reflections yet")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                        Text("After completing a match, add a reflection\nto track what you're learning.")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else {
+                    List(matchesWithReflections) { match in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("\(match.playerAName) vs \(match.playerBName)")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.black)
+                            Text(match.date.formatted(date: .abbreviated, time: .omitted))
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                            if let focus = match.reflection?.nextFocus, !focus.isEmpty {
+                                Text("Focus: \(focus)")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                                    .lineLimit(1)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        .listRowBackground(Color.white)
+                        .onTapGesture { selectedMatch = match }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                }
+            }
+            .sheet(item: $selectedMatch) { match in
+                ReflectionSheetWrapper(match: match, onDismiss: { selectedMatch = nil })
+            }
+            .navigationTitle("Reflections")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                }
+            }
+        }
+    }
+}
+
+private struct ReflectionSheetWrapper: View {
+    @State var match: Match
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ReflectionEntryView(match: $match, onDismiss: onDismiss)
     }
 }
 
