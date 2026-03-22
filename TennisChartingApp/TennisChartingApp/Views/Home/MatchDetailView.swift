@@ -7,8 +7,13 @@ import SwiftUI
 import UIKit
 
 struct MatchDetailView: View {
-    let match: Match
+    @State private var match: Match
     @Environment(\.dismiss) private var dismiss
+    @State private var showReflection = false
+
+    init(match: Match) {
+        self._match = State(initialValue: match)
+    }
 
     var body: some View {
         NavigationStack {
@@ -159,6 +164,49 @@ struct MatchDetailView: View {
                         .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
                         .padding(.horizontal)
 
+                        // Reflection
+                        if let reflection = match.reflection {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("Reflection")
+                                        .font(.headline)
+                                        .foregroundColor(.black)
+                                    Spacer()
+                                    Button("Edit") { showReflection = true }
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                                }
+
+                                reflectionRow(label: "What went well", value: reflection.wentWell)
+                                reflectionRow(label: "What needs work", value: reflection.needsWork)
+                                reflectionRow(label: "One focus for next time", value: reflection.nextFocus)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                            .padding(.horizontal)
+                        } else {
+                            Button { showReflection = true } label: {
+                                HStack {
+                                    Text("Add Reflection")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                                .padding(.horizontal)
+                            }
+                        }
+
                         Spacer()
                     }
                 }
@@ -177,6 +225,22 @@ struct MatchDetailView: View {
             .toolbarBackground(Color(UIColor.systemGray6), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.light, for: .navigationBar)
+            .sheet(isPresented: $showReflection) {
+                ReflectionEntryView(match: $match, onDismiss: {
+                    showReflection = false
+                })
+            }
+        }
+    }
+
+    private func reflectionRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.gray)
+            Text(value.isEmpty ? "—" : value)
+                .font(.system(size: 15))
+                .foregroundColor(.black)
         }
     }
 }
