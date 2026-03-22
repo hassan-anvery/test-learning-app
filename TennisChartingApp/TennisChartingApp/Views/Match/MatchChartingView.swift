@@ -15,6 +15,7 @@ struct MatchChartingView: View {
     @State private var pendingPointWinner: PlayerSide?
     @State private var undoStack: [Match] = []
     @State private var redoStack: [Match] = []
+    @State private var showReflection = false
 
     // Current game state
     private var currentSet: MatchSet {
@@ -129,8 +130,13 @@ struct MatchChartingView: View {
         .onChange(of: match.isCompleted) { _, isCompleted in
             if isCompleted {
                 MatchStore.shared.updateMatch(match)
-                dismiss()
+                showReflection = true
             }
+        }
+        .sheet(isPresented: $showReflection) {
+            ReflectionEntryView(match: $match, onDismiss: {
+                dismiss()
+            })
         }
     }
 
@@ -463,7 +469,7 @@ struct MatchChartingView: View {
     private func endMatch() {
         match.isCompleted = true
         MatchStore.shared.updateMatch(match)
-        dismiss()
+        showReflection = true
     }
 
     private func addNoteToLastPoint(for player: PlayerSide, note: PointNote) {
