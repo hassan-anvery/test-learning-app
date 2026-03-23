@@ -16,6 +16,32 @@ struct HomeView: View {
     @State private var matchToDelete: Match?
     @State private var showDeleteConfirmation = false
     @State private var showReflections = false
+    @State private var showFilters = false
+    @State private var filterSessionType: SessionType? = nil
+    @State private var filterResult: ResultFilter? = nil
+    @State private var filterReflection: Bool? = nil
+
+    private var hasActiveFilters: Bool {
+        filterSessionType != nil || filterResult != nil || filterReflection != nil
+    }
+
+    private var filteredMatches: [Match] {
+        MatchStore.shared.matches.filter { match in
+            if let st = filterSessionType, match.sessionType != st { return false }
+            if let rf = filterResult {
+                switch rf {
+                case .win:        if match.winner != .playerA { return false }
+                case .loss:       if match.winner != .playerB { return false }
+                case .inProgress: if match.isCompleted { return false }
+                }
+            }
+            if let hasRef = filterReflection {
+                if hasRef && match.reflection == nil { return false }
+                if !hasRef && match.reflection != nil { return false }
+            }
+            return true
+        }
+    }
 
     private var groupedMatches: [(month: String, matches: [Match])] {
         let formatter = DateFormatter()
@@ -23,7 +49,7 @@ struct HomeView: View {
         var groups: [(month: String, matches: [Match])] = []
         var currentKey: String?
         var currentGroup: [Match] = []
-        for match in MatchStore.shared.matches {
+        for match in filteredMatches {
             let key = formatter.string(from: match.date)
             if key == currentKey {
                 currentGroup.append(match)
@@ -117,7 +143,8 @@ struct HomeView: View {
 
                 // Bottom tab bar
                 BottomTabBar(
-                    onFiltersPressed: { /* TODO: show filters */ },
+                    filtersActive: hasActiveFilters,
+                    onFiltersPressed: { showFilters = true },
                     onNewMatchPressed: { showMatchSetup = true },
                     onReflectPressed: { showReflections = true }
                 )
@@ -125,6 +152,14 @@ struct HomeView: View {
         }
         .fullScreenCover(isPresented: $showMatchSetup) {
             MatchSetupView()
+        }
+        .sheet(isPresented: $showFilters) {
+            FilterSheetView(
+                sessionType: $filterSessionType,
+                result: $filterResult,
+                reflection: $filterReflection
+            )
+            .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showReflections) {
             ReflectionsView()
@@ -251,6 +286,7 @@ struct MatchRowView: View {
 }
 
 struct BottomTabBar: View {
+    let filtersActive: Bool
     let onFiltersPressed: () -> Void
     let onNewMatchPressed: () -> Void
     let onReflectPressed: () -> Void
@@ -258,10 +294,18 @@ struct BottomTabBar: View {
     var body: some View {
         HStack(spacing: 0) {
             Button(action: onFiltersPressed) {
-                Image(systemName: "line.3.horizontal.decrease")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.black)
-                    .frame(width: 44, height: 44)
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.black)
+                        .frame(width: 44, height: 44)
+                    if filtersActive {
+                        Circle()
+                            .fill(Color(red: 0.18, green: 0.55, blue: 0.45))
+                            .frame(width: 8, height: 8)
+                            .offset(x: 4, y: 4)
+                    }
+                }
             }
             .frame(maxWidth: .infinity)
 
