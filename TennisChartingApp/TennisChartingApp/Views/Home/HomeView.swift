@@ -20,13 +20,14 @@ struct HomeView: View {
     @State private var filterSessionType: SessionType? = nil
     @State private var filterResult: ResultFilter? = nil
     @State private var filterReflection: Bool? = nil
+    @State private var searchText = ""
 
     private var hasActiveFilters: Bool {
         filterSessionType != nil || filterResult != nil || filterReflection != nil
     }
 
     private var filteredMatches: [Match] {
-        MatchStore.shared.matches.filter { match in
+        let filtered = MatchStore.shared.matches.filter { match in
             if let st = filterSessionType, match.sessionType != st { return false }
             if let rf = filterResult {
                 switch rf {
@@ -40,6 +41,11 @@ struct HomeView: View {
                 if !hasRef && match.reflection != nil { return false }
             }
             return true
+        }
+        guard !searchText.isEmpty else { return filtered }
+        return filtered.filter {
+            $0.playerAName.localizedCaseInsensitiveContains(searchText) ||
+            $0.playerBName.localizedCaseInsensitiveContains(searchText)
         }
     }
 
@@ -101,6 +107,29 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
+
+                // Search bar
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                    TextField("Search by player name", text: $searchText)
+                        .foregroundColor(.black)
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(Color(UIColor.systemGray3))
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color.white)
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
 
                 // Match list
                 List {

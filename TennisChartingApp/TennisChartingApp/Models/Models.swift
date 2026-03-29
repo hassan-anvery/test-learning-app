@@ -33,6 +33,13 @@ enum SessionType: String, Codable, CaseIterable {
     case friendly    = "Friendly"
 }
 
+enum SurfaceType: String, Codable, CaseIterable {
+    case hard  = "Hard"
+    case clay  = "Clay"
+    case grass = "Grass"
+    case other = "Other"
+}
+
 // MARK: - Match
 
 struct Match: Codable, Identifiable {
@@ -47,6 +54,7 @@ struct Match: Codable, Identifiable {
     var firstServer: PlayerSide
     var noAd: Bool
     var sessionType: SessionType
+    var surface: SurfaceType?
     var reflection: MatchReflection?
 
     init(
@@ -57,7 +65,8 @@ struct Match: Codable, Identifiable {
         startingPlayer: PlayerSide,
         firstServer: PlayerSide,
         noAd: Bool = false,
-        sessionType: SessionType = .practice
+        sessionType: SessionType = .practice,
+        surface: SurfaceType? = nil
     ) {
         self.id = id
         self.playerAName = playerAName
@@ -70,6 +79,7 @@ struct Match: Codable, Identifiable {
         self.firstServer = firstServer
         self.noAd = noAd
         self.sessionType = sessionType
+        self.surface = surface
     }
 
     init(from decoder: Decoder) throws {
@@ -85,6 +95,7 @@ struct Match: Codable, Identifiable {
         firstServer    = try c.decode(PlayerSide.self,  forKey: .firstServer)
         noAd           = try c.decodeIfPresent(Bool.self,           forKey: .noAd)         ?? false
         sessionType    = try c.decodeIfPresent(SessionType.self,    forKey: .sessionType)  ?? .practice
+        surface        = try c.decodeIfPresent(SurfaceType.self,    forKey: .surface)
         reflection     = try c.decodeIfPresent(MatchReflection.self, forKey: .reflection)
     }
 

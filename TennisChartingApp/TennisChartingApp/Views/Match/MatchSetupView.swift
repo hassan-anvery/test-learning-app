@@ -19,6 +19,7 @@ struct MatchSetupView: View {
     @State private var matchFormat: MatchFormat = .bestOf3
     @State private var noAd: Bool = false
     @State private var sessionType: SessionType = .practice
+    @State private var selectedSurface: SurfaceType? = nil
     @State private var navigateToMatch = false
     @State private var createdMatch: Match?
 
@@ -51,6 +52,9 @@ struct MatchSetupView: View {
 
                         // Match format
                         matchFormatSection
+
+                        // Surface type
+                        surfaceTypeSection
 
                         // Session type
                         sessionTypeSection
@@ -266,6 +270,31 @@ struct MatchSetupView: View {
         }
     }
 
+    private var surfaceTypeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Surface")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.black)
+
+            HStack(spacing: 8) {
+                ForEach(SurfaceType.allCases, id: \.self) { surface in
+                    Button {
+                        selectedSurface = selectedSurface == surface ? nil : surface
+                    } label: {
+                        Text(surface.rawValue)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(selectedSurface == surface ? .white : .black)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(selectedSurface == surface ? Color(red: 0.18, green: 0.55, blue: 0.45) : Color.white)
+                            .cornerRadius(20)
+                            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                    }
+                }
+            }
+        }
+    }
+
     private var sessionTypeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Session Type")
@@ -327,7 +356,8 @@ struct MatchSetupView: View {
             startingPlayer: firstServer,
             firstServer: firstServer,
             noAd: noAd,
-            sessionType: sessionType
+            sessionType: sessionType,
+            surface: selectedSurface
         )
 
         MatchStore.shared.addMatch(match)
