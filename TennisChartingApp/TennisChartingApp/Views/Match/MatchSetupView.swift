@@ -79,7 +79,6 @@ struct MatchSetupView: View {
         .sheet(isPresented: $showPlayerPicker) {
             PlayerPickerView { profile in
                 selectedOpponentProfile = profile
-                playerBName = profile.name
             }
             .presentationDetents([.medium, .large])
         }
