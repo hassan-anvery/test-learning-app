@@ -25,6 +25,22 @@ struct MatchReflection: Codable {
     var nextFocus: String
 }
 
+struct PlayerProfile: Codable, Identifiable {
+    let id: UUID
+    var name: String
+    var notes: String?
+    var createdAt: Date
+    var lastPlayedAt: Date?
+
+    init(id: UUID = UUID(), name: String, notes: String? = nil) {
+        self.id = id
+        self.name = name
+        self.notes = notes
+        self.createdAt = Date()
+        self.lastPlayedAt = nil
+    }
+}
+
 enum SessionType: String, Codable, CaseIterable {
     case practice    = "Practice"
     case matchPlay   = "Match Play"
@@ -55,6 +71,7 @@ struct Match: Codable, Identifiable {
     var noAd: Bool
     var sessionType: SessionType
     var surface: SurfaceType?
+    var opponentProfileId: UUID?
     var reflection: MatchReflection?
 
     init(
@@ -66,7 +83,8 @@ struct Match: Codable, Identifiable {
         firstServer: PlayerSide,
         noAd: Bool = false,
         sessionType: SessionType = .practice,
-        surface: SurfaceType? = nil
+        surface: SurfaceType? = nil,
+        opponentProfileId: UUID? = nil
     ) {
         self.id = id
         self.playerAName = playerAName
@@ -80,6 +98,7 @@ struct Match: Codable, Identifiable {
         self.noAd = noAd
         self.sessionType = sessionType
         self.surface = surface
+        self.opponentProfileId = opponentProfileId
     }
 
     init(from decoder: Decoder) throws {
@@ -95,8 +114,9 @@ struct Match: Codable, Identifiable {
         firstServer    = try c.decode(PlayerSide.self,  forKey: .firstServer)
         noAd           = try c.decodeIfPresent(Bool.self,           forKey: .noAd)         ?? false
         sessionType    = try c.decodeIfPresent(SessionType.self,    forKey: .sessionType)  ?? .practice
-        surface        = try c.decodeIfPresent(SurfaceType.self,    forKey: .surface)
-        reflection     = try c.decodeIfPresent(MatchReflection.self, forKey: .reflection)
+        surface            = try c.decodeIfPresent(SurfaceType.self,    forKey: .surface)
+        opponentProfileId  = try c.decodeIfPresent(UUID.self,           forKey: .opponentProfileId)
+        reflection         = try c.decodeIfPresent(MatchReflection.self, forKey: .reflection)
     }
 
     var playerASetsWon: Int {

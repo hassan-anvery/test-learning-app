@@ -8,6 +8,7 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showLogoutConfirmation = false
+    @State private var showPlayers = false
 
     var body: some View {
         NavigationStack {
@@ -62,6 +63,27 @@ struct ProfileView: View {
                     .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                     .padding(.horizontal)
 
+                    // Players row
+                    Button {
+                        showPlayers = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.2")
+                                .foregroundColor(.primary)
+                            Text("Player Profiles")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Color(UIColor.systemGray3))
+                        }
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+                    }
+                    .padding(.horizontal)
+
                     Spacer()
 
                     // Logout button
@@ -93,6 +115,9 @@ struct ProfileView: View {
             .toolbarBackground(Color(red: 0.96, green: 0.96, blue: 0.96), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.light, for: .navigationBar)
+            .sheet(isPresented: $showPlayers) {
+                PlayersView()
+            }
             .alert("Log Out", isPresented: $showLogoutConfirmation) {
                 Button("Yes", role: .destructive) {
                     UserDefaults.standard.set(false, forKey: "hasSeenWelcome")

@@ -20,6 +20,8 @@ struct MatchSetupView: View {
     @State private var noAd: Bool = false
     @State private var sessionType: SessionType = .practice
     @State private var selectedSurface: SurfaceType? = nil
+    @State private var selectedOpponentProfile: PlayerProfile? = nil
+    @State private var showPlayerPicker = false
     @State private var navigateToMatch = false
     @State private var createdMatch: Match?
 
@@ -73,6 +75,13 @@ struct MatchSetupView: View {
         }
         .fullScreenCover(item: $createdMatch) { match in
             MatchChartingView(match: match)
+        }
+        .sheet(isPresented: $showPlayerPicker) {
+            PlayerPickerView { profile in
+                selectedOpponentProfile = profile
+                playerBName = profile.name
+            }
+            .presentationDetents([.medium, .large])
         }
         .onChange(of: createdMatch?.id) { oldValue, newValue in
             // When MatchChartingView dismisses (createdMatch becomes nil)
@@ -155,6 +164,52 @@ struct MatchSetupView: View {
             .background(Color.white)
             .cornerRadius(12)
             .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+
+            // Opponent profile picker
+            if let profile = selectedOpponentProfile {
+                HStack {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(red: 0.18, green: 0.55, blue: 0.45))
+                    Text(profile.name)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.black)
+                    Spacer()
+                    Button {
+                        selectedOpponentProfile = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(Color(UIColor.systemGray3))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.white)
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+            } else {
+                Button {
+                    showPlayerPicker = true
+                } label: {
+                    HStack {
+                        Image(systemName: "person.2")
+                            .font(.system(size: 13))
+                            .foregroundColor(.gray)
+                        Text("Choose saved player")
+                            .font(.system(size: 15))
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Color(UIColor.systemGray3))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color.white)
+                    .cornerRadius(12)
+                    .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                }
+            }
         }
     }
 
@@ -357,10 +412,17 @@ struct MatchSetupView: View {
             firstServer: firstServer,
             noAd: noAd,
             sessionType: sessionType,
-            surface: selectedSurface
+            surface: selectedSurface,
+            opponentProfileId: selectedOpponentProfile?.id
         )
 
         MatchStore.shared.addMatch(match)
+
+        if var profile = selectedOpponentProfile {
+            profile.lastPlayedAt = Date()
+            PlayerProfileStore.shared.updateProfile(profile)
+        }
+
         createdMatch = match
     }
 }

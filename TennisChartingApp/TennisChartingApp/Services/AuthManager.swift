@@ -28,6 +28,7 @@ class AuthManager {
             isAuthenticated = true
         }
         MatchStore.shared.setActiveUser(currentUser)
+        PlayerProfileStore.shared.setActiveUser(currentUser)
     }
 
     private func loadAllUsers() -> [User] {
@@ -87,6 +88,7 @@ class AuthManager {
         currentUser = newUser
         isAuthenticated = true
         MatchStore.shared.setActiveUser(newUser)
+        PlayerProfileStore.shared.setActiveUser(newUser)
 
         return .success(newUser)
     }
@@ -107,6 +109,7 @@ class AuthManager {
         currentUser = user
         isAuthenticated = true
         MatchStore.shared.setActiveUser(user)
+        PlayerProfileStore.shared.setActiveUser(user)
 
         return .success(user)
     }
@@ -116,6 +119,7 @@ class AuthManager {
         currentUser = nil
         isAuthenticated = false
         MatchStore.shared.setActiveUser(nil)
+        PlayerProfileStore.shared.setActiveUser(nil)
     }
 }
 
