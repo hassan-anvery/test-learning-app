@@ -9,6 +9,7 @@ import Charts
 struct StatsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+    @State private var selectedMatch: Match? = nil
 
     private var filteredMatches: [Match] {
         let completedMatches = MatchStore.shared.matches.filter { $0.isCompleted }
@@ -64,12 +65,20 @@ struct StatsView: View {
                                     .padding(.top, 40)
                             } else {
                                 ForEach(filteredMatches) { match in
-                                    MatchStatsCard(match: match)
+                                    MatchStatsCard(match: match) { selectedMatch = match }
                                 }
                             }
                         }
                         .padding()
                     }
+                }
+            }
+            .navigationDestination(isPresented: Binding(
+                get: { selectedMatch != nil },
+                set: { if !$0 { selectedMatch = nil } }
+            )) {
+                if let match = selectedMatch {
+                    MatchStatsDetailView(match: match)
                 }
             }
             .navigationTitle("Match Stats")
@@ -91,7 +100,7 @@ struct StatsView: View {
 
 struct MatchStatsCard: View {
     let match: Match
-    @State private var showDetail = false
+    let onSelect: () -> Void
 
     private var momentumData: [MomentumPoint] {
         // Get fresh match data from store to ensure notes are included
@@ -215,10 +224,7 @@ struct MatchStatsCard: View {
         .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         .contentShape(Rectangle())
         .onTapGesture {
-            showDetail = true
-        }
-        .navigationDestination(isPresented: $showDetail) {
-            MatchStatsDetailView(match: match)
+            onSelect()
         }
     }
 }
